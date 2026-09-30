@@ -1,1 +1,56 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SPORTUV</title>
+<style>
+:root{--az:#123f5a;--az2:#0d334a;--bg:#f4f7f9;--tx:#17242d;--mut:#6b7a86}
+*{box-sizing:border-box}body{margin:0;background:#dfe7ec;color:var(--tx);font-family:Arial,Helvetica,sans-serif}
+#app{max-width:430px;min-height:100vh;margin:auto;background:var(--bg);box-shadow:0 0 35px #0002}
+header{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;position:sticky;top:0;z-index:10;border-bottom:1px solid #dde5ea}
+header b{color:var(--az);letter-spacing:.08em}button{font:inherit;cursor:pointer}
+.icon{border:0;background:#edf3f6;color:var(--az);width:42px;height:42px;border-radius:13px;font-size:20px}
+main{padding:22px}.hide{display:none}.login{min-height:100vh;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:34px 28px}
+.logo{text-align:center;font-size:48px;color:var(--az);font-weight:800}.tag{text-align:center;font-size:21px;margin:10px 0 35px}
+label{font-weight:700;display:block;margin:14px 0 7px}.field{width:100%;padding:15px;border:1px solid #cfd9df;border-radius:13px;font-size:16px}
+.btn{width:100%;border:0;border-radius:14px;padding:15px;background:var(--az);color:#fff;font-weight:800;margin-top:18px}.btn.alt{background:#e7f0f5;color:var(--az)}
+.err{background:#fff0f0;color:#9f3434;padding:10px;border-radius:10px;margin-top:12px}
+h1{font-size:27px;margin:4px 0 8px}.sub{color:var(--mut);margin-bottom:18px}
+.card{height:190px;border-radius:20px;overflow:hidden;position:relative;margin:15px 0;box-shadow:0 12px 30px #0002;background:#222}
+.card img,.hero img{width:100%;height:100%;object-fit:cover}.shade{position:absolute;inset:0;background:linear-gradient(transparent,#000b)}
+.ct{position:absolute;left:18px;right:18px;bottom:15px;color:#fff;z-index:2}.ct h2{margin:0 0 5px}.pill{display:inline-block;background:#fff;color:var(--az);padding:8px 11px;border-radius:999px;font-weight:700;font-size:13px;margin-top:8px}
+.hero{height:220px;margin:-22px -22px 18px;position:relative;overflow:hidden}.hero h1{position:absolute;left:20px;right:20px;bottom:18px;color:#fff;z-index:2}
+.panel{background:#fff;border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 8px 24px #18364612}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.slot,.day{padding:12px 8px;border:1px solid #d6e0e6;background:#fff;border-radius:12px;text-align:center}.sel{background:var(--az);color:#fff;border-color:var(--az)}
+.ok{text-align:center;padding-top:45px}.tick{width:72px;height:72px;border-radius:50%;background:#e2f5ea;color:#26905f;display:grid;place-items:center;font-size:38px;margin:auto}
+.summary{background:#fff;border-radius:16px;padding:14px;margin:20px 0}.summary div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #ddd}.summary div:last-child{border:0}
+.small{font-size:13px;color:var(--mut)}
+@media(min-width:700px){body{padding:20px}#app{border-radius:28px;overflow:hidden}}
+</style>
+</head>
+<body>
+<div id="app"><div id="root"></div></div>
+<script>
+const S={
+ gym:{t:"Gimnasio SPORTUV",a:"el gimnasio",img:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",d:"Reserva tu bloque para entrenar en el gimnasio universitario."},
+ nut:{t:"Nutricionista",a:"un nutricionista",img:"https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",d:"Agenda orientación nutricional para apoyar tus hábitos y rendimiento."},
+ psi:{t:"Psicólogo/a",a:"un psicólogo/a",img:"https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",d:"Agenda un espacio de acompañamiento psicológico universitario."}
+};
+let st={v:"login",svc:null,day:null,time:null,user:localStorage.sportuv_user||"",hist:[]};
+const R=document.getElementById("root");
+function top(show=true){return show?'<header><button class="icon" onclick="back()">←</button><b>SPORTUV</b><button class="icon" onclick="home()">⌂</button></header>':""}
+function go(v,x={}){st.hist.push(st.v);Object.assign(st,{v},x);render()}function back(){st.v=st.hist.pop()||"home";render()}function home(){st.hist=[];st.v="home";render()}
+function render(){
+ if(st.v==="login"){R.innerHTML='<section class="login"><div class="logo">SPORTUV</div><div class="tag">“Activa tu cuerpo, despeja tu mente”</div><label>Correo institucional</label><input id="mail" class="field" placeholder="nombre@uv.cl" value="'+st.user+'"><label>Contraseña</label><input id="pass" class="field" type="password" placeholder="••••••••"><button class="btn" onclick="login()">Ingresar →</button><div id="e"></div><p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl.</p></section>';return}
+ if(st.v==="home"){R.innerHTML=top()+'<main><h1>Hola, '+(st.user.split("@")[0]||"estudiante")+' 👋</h1><p class="sub">¿Qué quieres agendar hoy?</p>'+Object.entries(S).map(([k,s])=>'<div class="card" onclick="go(\'booking\',{svc:\''+k+'\',day:null,time:null})"><img src="'+s.img+'"><div class="shade"></div><div class="ct"><h2>'+s.t+'</h2><div>'+s.d+'</div><span class="pill">Agendar →</span></div></div>').join("")+'</main>';return}
+ if(st.v==="booking"){let s=S[st.svc],ds=days(),ts=times(st.svc);R.innerHTML=top()+'<main><div class="hero"><img src="'+s.img+'"><div class="shade"></div><h1>Agenda tu hora con '+s.a+'</h1></div><div class="panel"><b>1. Selecciona el día</b><div class="grid" style="margin-top:12px">'+ds.map(d=>'<button class="day '+(st.day===d.k?"sel":"")+'" onclick="pickDay(\''+d.k+'\')"><b>'+d.n+'</b><br><span class="small">'+d.w+'</span></button>').join("")+'</div></div><div class="panel"><b>2. Selecciona la hora</b><div class="grid" style="margin-top:12px">'+ts.map(t=>'<button class="slot '+(st.time===t?"sel":"")+'" onclick="pickTime(\''+t+'\')">'+t+'</button>').join("")+'</div></div><button class="btn" '+(!st.day||!st.time?'disabled style="opacity:.45"':'onclick="confirm()"')+'>Agendar</button></main>';return}
+ if(st.v==="done"){let b=st.booking,s=S[b.svc];R.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+s.t.toLowerCase()+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+s.t+'</b></div><div><span>Fecha</span><b>'+b.day+'</b></div><div><span>Hora</span><b>'+b.time+'</b></div><div><span>Código</span><b>'+b.id+'</b></div></div><button class="btn" onclick="home()">Volver al inicio</button></main>';return}
+}
+function login(){let m=document.getElementById("mail").value.trim().toLowerCase(),p=document.getElementById("pass").value;if(!m.endsWith("@uv.cl")||p.length<4){document.getElementById("e").innerHTML='<div class="err">Usa un correo @uv.cl y una contraseña de al menos 4 caracteres.</div>';return}localStorage.sportuv_user=m;st.user=m;st.v="home";render()}
+function days(){let a=[],n=new Date();for(let i=0;i<3;i++){let d=new Date(n);d.setDate(n.getDate()+i);a.push({k:d.toISOString().slice(0,10),n:d.getDate(),w:d.toLocaleDateString("es-CL",{weekday:"short"})})}return a}
+function times(s){return s==="gym"?["09:00","10:00","11:00","12:00","15:00","16:00","17:00","18:00"]:s==="nut"?["09:30","10:30","11:30","14:30","15:30","16:30"]:["09:00","10:00","11:00","12:00","15:00","16:00","17:00"]}
+function pickDay(d){st.day=d;st.time=null;render()}function pickTime(t){st.time=t;render()}
+function confirm(){let b={id:"SUV-"+Date.now().toString().slice(-6),svc:st.svc,day:st.day,time:st.time};let a=JSON.parse(localStorage.sportuv_bookings||"[]");a.unshift(b);localStorage.sportuv_bookings=JSON.stringify(a);st.booking=b;st.v="done";render()}
+render();
+</script></body></html>
