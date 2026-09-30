@@ -3,54 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123f5a">
 <title>SPORTUV</title>
 <style>
 :root{--az:#123f5a;--az2:#0d334a;--bg:#f4f7f9;--tx:#17242d;--mut:#6b7a86}
-*{box-sizing:border-box}body{margin:0;background:#dfe7ec;color:var(--tx);font-family:Arial,Helvetica,sans-serif}
-#app{max-width:430px;min-height:100vh;margin:auto;background:var(--bg);box-shadow:0 0 35px #0002}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#dfe7ec;color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+#app{width:100%;max-width:430px;min-height:100vh;margin:0 auto;background:var(--bg)}
 header{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;position:sticky;top:0;z-index:10;border-bottom:1px solid #dde5ea}
-header b{color:var(--az);letter-spacing:.08em}button{font:inherit;cursor:pointer}
-.icon{border:0;background:#edf3f6;color:var(--az);width:42px;height:42px;border-radius:13px;font-size:20px}
-main{padding:22px}.hide{display:none}.login{min-height:100vh;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:34px 28px}
+header b{color:var(--az);letter-spacing:.08em}.icon{border:0;background:#edf3f6;color:var(--az);width:42px;height:42px;border-radius:13px;font-size:20px}
+main{padding:22px}.login{min-height:100vh;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:34px 28px}
 .logo{text-align:center;font-size:48px;color:var(--az);font-weight:800}.tag{text-align:center;font-size:21px;margin:10px 0 35px}
-label{font-weight:700;display:block;margin:14px 0 7px}.field{width:100%;padding:15px;border:1px solid #cfd9df;border-radius:13px;font-size:16px}
-.btn{width:100%;border:0;border-radius:14px;padding:15px;background:var(--az);color:#fff;font-weight:800;margin-top:18px}.btn.alt{background:#e7f0f5;color:var(--az)}
+label{font-weight:700;display:block;margin:14px 0 7px}.field{width:100%;padding:15px;border:1px solid #cfd9df;border-radius:13px;font-size:16px;background:#fff}
+.btn{width:100%;border:0;border-radius:14px;padding:15px;background:var(--az);color:#fff;font-weight:800;margin-top:18px;font-size:16px}.btn:disabled{opacity:.45}
 .err{background:#fff0f0;color:#9f3434;padding:10px;border-radius:10px;margin-top:12px}
-h1{font-size:27px;margin:4px 0 8px}.sub{color:var(--mut);margin-bottom:18px}
-.card{height:190px;border-radius:20px;overflow:hidden;position:relative;margin:15px 0;box-shadow:0 12px 30px #0002;background:#222}
-.card img,.hero img{width:100%;height:100%;object-fit:cover}.shade{position:absolute;inset:0;background:linear-gradient(transparent,#000b)}
+h1{font-size:27px;margin:4px 0 8px}.sub{color:var(--mut);margin-bottom:18px}.small{font-size:13px;color:var(--mut)}
+.card{height:190px;border-radius:20px;overflow:hidden;position:relative;margin:15px 0;box-shadow:0 12px 30px #0002;background:#31434e}
+.card img,.hero img{width:100%;height:100%;object-fit:cover}.shade{position:absolute;inset:0;background:linear-gradient(transparent,#000c)}
 .ct{position:absolute;left:18px;right:18px;bottom:15px;color:#fff;z-index:2}.ct h2{margin:0 0 5px}.pill{display:inline-block;background:#fff;color:var(--az);padding:8px 11px;border-radius:999px;font-weight:700;font-size:13px;margin-top:8px}
-.hero{height:220px;margin:-22px -22px 18px;position:relative;overflow:hidden}.hero h1{position:absolute;left:20px;right:20px;bottom:18px;color:#fff;z-index:2}
+.hero{height:220px;margin:-22px -22px 18px;position:relative;overflow:hidden;background:#31434e}.hero h1{position:absolute;left:20px;right:20px;bottom:18px;color:#fff;z-index:2}
 .panel{background:#fff;border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 8px 24px #18364612}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .slot,.day{padding:12px 8px;border:1px solid #d6e0e6;background:#fff;border-radius:12px;text-align:center}.sel{background:var(--az);color:#fff;border-color:var(--az)}
 .ok{text-align:center;padding-top:45px}.tick{width:72px;height:72px;border-radius:50%;background:#e2f5ea;color:#26905f;display:grid;place-items:center;font-size:38px;margin:auto}
-.summary{background:#fff;border-radius:16px;padding:14px;margin:20px 0}.summary div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #ddd}.summary div:last-child{border:0}
-.small{font-size:13px;color:var(--mut)}
-@media(min-width:700px){body{padding:20px}#app{border-radius:28px;overflow:hidden}}
+.summary{background:#fff;border-radius:16px;padding:14px;margin:20px 0}.summary div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed #ddd}.summary div:last-child{border:0}
+@media(min-width:700px){body{padding:20px}#app{border-radius:28px;overflow:hidden;box-shadow:0 0 35px #0002}}
 </style>
 </head>
 <body>
-<div id="app"><div id="root"></div></div>
+<div id="app">
+  <section class="login">
+    <div class="logo">SPORTUV</div>
+    <div class="tag">“Activa tu cuerpo, despeja tu mente”</div>
+    <label for="mail">Correo institucional</label>
+    <input id="mail" class="field" type="email" inputmode="email" autocomplete="email" placeholder="nombre@uv.cl">
+    <label for="pass">Contraseña</label>
+    <input id="pass" class="field" type="password" autocomplete="current-password" placeholder="••••••••">
+    <button class="btn" id="loginBtn">Ingresar →</button>
+    <div id="e"></div>
+    <p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>
+  </section>
+</div>
 <script>
-const S={
+(function(){
+"use strict";
+var S={
  gym:{t:"Gimnasio SPORTUV",a:"el gimnasio",img:"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",d:"Reserva tu bloque para entrenar en el gimnasio universitario."},
  nut:{t:"Nutricionista",a:"un nutricionista",img:"https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",d:"Agenda orientación nutricional para apoyar tus hábitos y rendimiento."},
  psi:{t:"Psicólogo/a",a:"un psicólogo/a",img:"https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80",d:"Agenda un espacio de acompañamiento psicológico universitario."}
 };
-let st={v:"login",svc:null,day:null,time:null,user:localStorage.sportuv_user||"",hist:[]};
-const R=document.getElementById("root");
-function top(show=true){return show?'<header><button class="icon" onclick="back()">←</button><b>SPORTUV</b><button class="icon" onclick="home()">⌂</button></header>':""}
-function go(v,x={}){st.hist.push(st.v);Object.assign(st,{v},x);render()}function back(){st.v=st.hist.pop()||"home";render()}function home(){st.hist=[];st.v="home";render()}
+var st={v:"login",svc:null,day:null,time:null,user:"",hist:[],booking:null};
+var A=document.getElementById("app");
+function storeGet(k){try{return window.localStorage?localStorage.getItem(k)||"":""}catch(e){return ""}}
+function storeSet(k,v){try{if(window.localStorage)localStorage.setItem(k,v)}catch(e){}}
+st.user=storeGet("sportuv_user");
+var mail=document.getElementById("mail"); if(mail&&st.user) mail.value=st.user;
+function top(){return '<header><button class="icon" data-act="back">←</button><b>SPORTUV</b><button class="icon" data-act="home">⌂</button></header>'}
+function go(v,x){st.hist.push(st.v);if(x)Object.keys(x).forEach(function(k){st[k]=x[k]});st.v=v;render()}
+function back(){st.v=st.hist.pop()||"home";render()} function home(){st.hist=[];st.v="home";render()}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]})}
 function render(){
- if(st.v==="login"){R.innerHTML='<section class="login"><div class="logo">SPORTUV</div><div class="tag">“Activa tu cuerpo, despeja tu mente”</div><label>Correo institucional</label><input id="mail" class="field" placeholder="nombre@uv.cl" value="'+st.user+'"><label>Contraseña</label><input id="pass" class="field" type="password" placeholder="••••••••"><button class="btn" onclick="login()">Ingresar →</button><div id="e"></div><p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl.</p></section>';return}
- if(st.v==="home"){R.innerHTML=top()+'<main><h1>Hola, '+(st.user.split("@")[0]||"estudiante")+' 👋</h1><p class="sub">¿Qué quieres agendar hoy?</p>'+Object.entries(S).map(([k,s])=>'<div class="card" onclick="go(\'booking\',{svc:\''+k+'\',day:null,time:null})"><img src="'+s.img+'"><div class="shade"></div><div class="ct"><h2>'+s.t+'</h2><div>'+s.d+'</div><span class="pill">Agendar →</span></div></div>').join("")+'</main>';return}
- if(st.v==="booking"){let s=S[st.svc],ds=days(),ts=times(st.svc);R.innerHTML=top()+'<main><div class="hero"><img src="'+s.img+'"><div class="shade"></div><h1>Agenda tu hora con '+s.a+'</h1></div><div class="panel"><b>1. Selecciona el día</b><div class="grid" style="margin-top:12px">'+ds.map(d=>'<button class="day '+(st.day===d.k?"sel":"")+'" onclick="pickDay(\''+d.k+'\')"><b>'+d.n+'</b><br><span class="small">'+d.w+'</span></button>').join("")+'</div></div><div class="panel"><b>2. Selecciona la hora</b><div class="grid" style="margin-top:12px">'+ts.map(t=>'<button class="slot '+(st.time===t?"sel":"")+'" onclick="pickTime(\''+t+'\')">'+t+'</button>').join("")+'</div></div><button class="btn" '+(!st.day||!st.time?'disabled style="opacity:.45"':'onclick="confirm()"')+'>Agendar</button></main>';return}
- if(st.v==="done"){let b=st.booking,s=S[b.svc];R.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+s.t.toLowerCase()+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+s.t+'</b></div><div><span>Fecha</span><b>'+b.day+'</b></div><div><span>Hora</span><b>'+b.time+'</b></div><div><span>Código</span><b>'+b.id+'</b></div></div><button class="btn" onclick="home()">Volver al inicio</button></main>';return}
+ if(st.v==="home"){
+  var cards=Object.keys(S).map(function(k){var s=S[k];return '<div class="card" data-service="'+k+'"><img alt="'+esc(s.t)+'" src="'+s.img+'"><div class="shade"></div><div class="ct"><h2>'+esc(s.t)+'</h2><div>'+esc(s.d)+'</div><span class="pill">Agendar →</span></div></div>'}).join("");
+  A.innerHTML=top()+'<main><h1>Hola, '+esc((st.user.split("@")[0]||"estudiante"))+' 👋</h1><p class="sub">¿Qué quieres agendar hoy?</p>'+cards+'</main>';return;
+ }
+ if(st.v==="booking"){
+  var s=S[st.svc], ds=days(), ts=times(st.svc);
+  var dhtml=ds.map(function(d){return '<button class="day '+(st.day===d.k?"sel":"")+'" data-day="'+d.k+'"><b>'+d.n+'</b><br><span class="small">'+d.w+'</span></button>'}).join("");
+  var thtml=ts.map(function(t){return '<button class="slot '+(st.time===t?"sel":"")+'" data-time="'+t+'">'+t+'</button>'}).join("");
+  A.innerHTML=top()+'<main><div class="hero"><img alt="'+esc(s.t)+'" src="'+s.img+'"><div class="shade"></div><h1>Agenda tu hora con '+esc(s.a)+'</h1></div><div class="panel"><b>1. Selecciona el día</b><div class="grid" style="margin-top:12px">'+dhtml+'</div></div><div class="panel"><b>2. Selecciona la hora</b><div class="grid" style="margin-top:12px">'+thtml+'</div></div><button class="btn" id="confirmBtn" '+(!st.day||!st.time?"disabled":"")+'>Agendar</button></main>';return;
+ }
+ if(st.v==="done"){
+  var b=st.booking,s2=S[b.svc];
+  A.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+esc(s2.t.toLowerCase())+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+esc(s2.t)+'</b></div><div><span>Fecha</span><b>'+esc(b.day)+'</b></div><div><span>Hora</span><b>'+esc(b.time)+'</b></div><div><span>Código</span><b>'+esc(b.id)+'</b></div></div><button class="btn" data-act="home">Volver al inicio</button></main>';return;
+ }
 }
-function login(){let m=document.getElementById("mail").value.trim().toLowerCase(),p=document.getElementById("pass").value;if(!m.endsWith("@uv.cl")||p.length<4){document.getElementById("e").innerHTML='<div class="err">Usa un correo @uv.cl y una contraseña de al menos 4 caracteres.</div>';return}localStorage.sportuv_user=m;st.user=m;st.v="home";render()}
-function days(){let a=[],n=new Date();for(let i=0;i<3;i++){let d=new Date(n);d.setDate(n.getDate()+i);a.push({k:d.toISOString().slice(0,10),n:d.getDate(),w:d.toLocaleDateString("es-CL",{weekday:"short"})})}return a}
+function login(){
+ var m=(document.getElementById("mail").value||"").trim().toLowerCase();
+ var p=document.getElementById("pass").value||"";
+ if(m.slice(-6)!=="@uv.cl"||p.length<4){document.getElementById("e").innerHTML='<div class="err">Usa un correo @uv.cl y una contraseña de al menos 4 caracteres.</div>';return}
+ st.user=m;storeSet("sportuv_user",m);st.v="home";render();
+}
+function days(){var a=[],n=new Date();for(var i=0;i<3;i++){var d=new Date(n.getTime());d.setDate(n.getDate()+i);a.push({k:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),n:d.getDate(),w:d.toLocaleDateString("es-CL",{weekday:"short"})})}return a}
 function times(s){return s==="gym"?["09:00","10:00","11:00","12:00","15:00","16:00","17:00","18:00"]:s==="nut"?["09:30","10:30","11:30","14:30","15:30","16:30"]:["09:00","10:00","11:00","12:00","15:00","16:00","17:00"]}
-function pickDay(d){st.day=d;st.time=null;render()}function pickTime(t){st.time=t;render()}
-function confirm(){let b={id:"SUV-"+Date.now().toString().slice(-6),svc:st.svc,day:st.day,time:st.time};let a=JSON.parse(localStorage.sportuv_bookings||"[]");a.unshift(b);localStorage.sportuv_bookings=JSON.stringify(a);st.booking=b;st.v="done";render()}
-render();
-</script></body></html>
+function confirm(){var b={id:"SUV-"+String(Date.now()).slice(-6),svc:st.svc,day:st.day,time:st.time};var raw=storeGet("sportuv_bookings"),arr=[];try{arr=raw?JSON.parse(raw):[]}catch(e){}arr.unshift(b);storeSet("sportuv_bookings",JSON.stringify(arr));st.booking=b;st.v="done";render()}
+document.addEventListener("click",function(ev){
+ var el=ev.target.closest("[data-act],[data-service],[data-day],[data-time],#loginBtn,#confirmBtn"); if(!el)return;
+ if(el.id==="loginBtn"){login();return} if(el.id==="confirmBtn"){confirm();return}
+ if(el.dataset.act==="back"){back();return} if(el.dataset.act==="home"){home();return}
+ if(el.dataset.service){go("booking",{svc:el.dataset.service,day:null,time:null});return}
+ if(el.dataset.day){st.day=el.dataset.day;st.time=null;render();return}
+ if(el.dataset.time){st.time=el.dataset.time;render();return}
+});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&st.v==="login")login()});
+})();
+</script>
+</body>
+</html>
