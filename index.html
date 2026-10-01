@@ -74,14 +74,16 @@ function render(){
  if(st.v==="done"){
   var b=st.booking,s2=S[b.svc];
   var qr="";
+  var fine="";
   if(b.svc==="gym"){
    var entrada="SPORTUV|ENTRADA|"+b.id+"|"+b.day+"|"+b.time;
    var salida="SPORTUV|SALIDA|"+b.id+"|"+b.day+"|"+b.time;
    var q1="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="+encodeURIComponent(entrada);
    var q2="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="+encodeURIComponent(salida);
-   qr='<section class="qr-wrap"><h2>Control de acceso</h2><p class="qr-note">Presenta el QR correspondiente al entrar y al salir del gimnasio.</p><div class="qr-grid"><div class="qr-card"><h3>QR de ingreso</h3><img alt="QR de ingreso" src="'+q1+'"><small>'+esc(b.id)+' · Entrada</small></div><div class="qr-card"><h3>QR de salida</h3><img alt="QR de salida" src="'+q2+'"><small>'+esc(b.id)+' · Salida</small></div></div><div class="fine-warning"><b>⚠️ Advertencia</b>Por cada 10 minutos que excedas tu horario reservado, se cobrará una multa de $1.000.</div></section>';
+   qr='<section class="qr-wrap"><h2>Control de acceso</h2><p class="qr-note">Presenta el QR correspondiente al entrar y al salir del gimnasio.</p><div class="qr-grid"><div class="qr-card"><h3>QR de ingreso</h3><img alt="QR de ingreso" src="'+q1+'"><small>'+esc(b.id)+' · Entrada</small></div><div class="qr-card"><h3>QR de salida</h3><img alt="QR de salida" src="'+q2+'"><small>'+esc(b.id)+' · Salida</small></div></div></section>';
+   fine='<div class="fine-warning"><b>⚠️ Importante</b>Por cada 10 minutos que excedas tu horario reservado en el gimnasio, se cobrará una multa de <strong>$1.000</strong>.</div>';
   }
-  A.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+esc(s2.t.toLowerCase())+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+esc(s2.t)+'</b></div><div><span>Fecha</span><b>'+esc(b.day)+'</b></div><div><span>Hora</span><b>'+esc(b.time)+'</b></div><div><span>Código</span><b>'+esc(b.id)+'</b></div></div>'+qr+'<button class="btn" data-act="home">Volver al inicio</button></main>';return;
+  A.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+esc(s2.t.toLowerCase())+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+esc(s2.t)+'</b></div><div><span>Fecha</span><b>'+esc(b.day)+'</b></div><div><span>Hora</span><b>'+esc(b.time)+'</b></div><div><span>Código</span><b>'+esc(b.id)+'</b></div></div>'+qr+fine+'<button class="btn" data-act="home">Volver al inicio</button><p class="small" style="text-align:center;margin-top:14px">SPORTUV · versión 30-09-26 22:00</p></main>';return;
  }
 }
 function login(){
