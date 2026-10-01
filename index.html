@@ -85,7 +85,7 @@ function render(){
    fine='<div class="fine-warning"><b>⚠️ Importante</b>Por cada 10 minutos que excedas tu horario reservado en el gimnasio, se cobrará una multa de <strong>$1.000</strong>.</div>';
   }
   if(b.svc==="nut"){appointmentInfo='<div class="panel" style="text-align:left"><b>🥗 Hora con nutricionista</b><p style="margin:10px 0 6px">Tu hora quedó agendada con <strong>'+esc(b.professional||"Profesional asignado")+'</strong>.</p><p style="margin:0">Debes presentarte en <strong>'+esc(b.location||"Edificio Hucke")+'</strong> el día y hora indicados.</p><p class="small" style="margin:10px 0 0">Los nombres mostrados corresponden a datos ficticios de demostración del prototipo.</p></div>'}
-  A.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+esc(s2.t.toLowerCase())+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+esc(s2.t)+'</b></div><div><span>Fecha</span><b>'+esc(b.day)+'</b></div><div><span>Hora</span><b>'+esc(b.time)+'</b></div><div><span>Código</span><b>'+esc(b.id)+'</b></div></div>'+appointmentInfo+qr+fine+'<button class="btn" data-act="home">Volver al inicio</button><p class="small" style="text-align:center;margin-top:14px">SPORTUV · versión 30-09-26 22:30</p></main>';return;
+  A.innerHTML=top()+'<main class="ok"><div class="tick">✓</div><h1>¡Hora agendada!</h1><p class="sub">Tu reserva con '+esc(s2.t.toLowerCase())+' quedó registrada.</p><div class="summary"><div><span>Servicio</span><b>'+esc(s2.t)+'</b></div><div><span>Fecha</span><b>'+esc(b.day)+'</b></div><div><span>Hora</span><b>'+esc(b.time)+'</b></div><div><span>Código</span><b>'+esc(b.id)+'</b></div></div>'+appointmentInfo+qr+fine+'<button class="btn" data-act="home">Volver al inicio</button><p class="small" style="text-align:center;margin-top:14px">SPORTUV · versión 30-09-26 22:40</p></main>';return;
  }
 }
 function login(){
@@ -95,7 +95,10 @@ function login(){
  st.user=m;storeSet("sportuv_user",m);st.v="home";render();
 }
 function days(){var a=[],n=new Date();for(var i=0;i<3;i++){var d=new Date(n.getTime());d.setDate(n.getDate()+i);a.push({k:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),n:d.getDate(),w:d.toLocaleDateString("es-CL",{weekday:"short"})})}return a}
-function times(s){return s==="gym"?["09:00","10:00","11:00","12:00","15:00","16:00","17:00","18:00"]:s==="nut"?["09:30","10:30","11:30","14:30","15:30","16:30"]:["09:00","10:00","11:00","12:00","15:00","16:00","17:00"]}\nfunction randomItem(a){return a[Math.floor(Math.random()*a.length)]}\nvar NUTRITIONISTS=["Camila Soto","Daniela Rojas","Felipe Araya","Valentina Morales","Sebastián Muñoz"];\nvar NUTRITION_LOCATIONS=["Edificio Hucke","Edificio EICO","Edificio ICI"];
+function times(s){return s==="gym"?["09:00","10:00","11:00","12:00","15:00","16:00","17:00","18:00"]:s==="nut"?["09:30","10:30","11:30","14:30","15:30","16:30"]:["09:00","10:00","11:00","12:00","15:00","16:00","17:00"]}
+function randomItem(a){return a[Math.floor(Math.random()*a.length)]}
+var NUTRITIONISTS=["Camila Soto","Daniela Rojas","Felipe Araya","Valentina Morales","Sebastián Muñoz"];
+var NUTRITION_LOCATIONS=["Edificio Hucke","Edificio EICO","Edificio ICI"];
 function confirm(){var b={id:"SUV-"+String(Date.now()).slice(-6),svc:st.svc,day:st.day,time:st.time};if(st.svc==="nut"){b.professional=randomItem(NUTRITIONISTS);b.location=randomItem(NUTRITION_LOCATIONS)}var raw=storeGet("sportuv_bookings"),arr=[];try{arr=raw?JSON.parse(raw):[]}catch(e){}arr.unshift(b);storeSet("sportuv_bookings",JSON.stringify(arr));st.booking=b;st.v="done";render()}
 document.addEventListener("click",function(ev){
  var el=ev.target.closest("[data-act],[data-service],[data-day],[data-time],#loginBtn,#confirmBtn"); if(!el)return;
