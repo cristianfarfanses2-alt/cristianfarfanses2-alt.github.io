@@ -31,12 +31,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <body>
 <header>
   <div class="brand"><strong>SPORTUV CONTROL</strong><span>Registro de reservas</span></div>
-  <button class="btn alt" id="refreshBtn">Actualizar</button>
+  <div style="display:flex;gap:8px;align-items:center"><input id="adminPin" type="password" placeholder="PIN administrador" style="border:1px solid #ccd8df;border-radius:10px;padding:9px 10px;max-width:170px"><button class="btn alt" id="loginAdminBtn">Ingresar</button><button class="btn alt" id="refreshBtn">Actualizar</button></div>
 </header>
 
 <div class="wrap">
   <h1>Reservas por día</h1>
-  <p class="sub">Visualiza las reservas registradas desde SPORTUV.</p>
+  <p class="sub">Visualiza las reservas registradas desde SPORTUV en la base de datos central.</p><div id="adminStatus" class="notice" style="display:none;margin:0 0 16px"></div>
 
   <section class="stats">
     <div class="stat"><b id="totalCount">0</b><span>Reservas mostradas</span></div>
@@ -92,7 +92,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   </section>
 
   <div class="notice">
-    <b>Importante para el prototipo:</b> esta versión está vinculada mediante el almacenamiento del navegador. Por eso el panel ve las reservas hechas en <b>este mismo navegador y dispositivo</b>. Para que el sistema reciba reservas desde todos los teléfonos de los estudiantes se necesita conectar SPORTUV a una base de datos central.
+    <b>Base central activa:</b> este panel consulta Supabase, por lo que puede mostrar reservas realizadas desde distintos teléfonos y computadores.
   </div>
 </div>
 <footer>SPORTUV · Panel administrativo de demostración</footer>
@@ -100,20 +100,15 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 <script>
 (function(){
   "use strict";
-  var KEY="sportuv_reservations";
+  var SUPABASE_URL="https://calpquedjzbouzwmpcvi.supabase.co";
+  var SUPABASE_KEY="sb_publishable_PvNoi_wpr8ZiM4aPzJv_Wg_qQni3t9P";
   var current=[];
+  var allReservations=[];
 
   function esc(v){
     return String(v==null?"":v).replace(/[&<>"']/g,function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
-  }
-
-  function loadReservations(){
-    try{
-      var a=JSON.parse(localStorage.getItem(KEY)||"[]");
-      return Array.isArray(a)?a:[];
-    }catch(e){return []}
   }
 
   function today(){
@@ -130,10 +125,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   }
 
   function assigned(r){
-    if(r.assignedPlace) return r.assignedPlace;
-    if(r.room) return "Sala "+r.room;
-    if(r.location) return r.location;
-    return "Por asignar";
+    return r.assigned_place || (r.room ? "Sala "+r.room : "Por asignar");
   }
 
   function createdText(v){
@@ -143,15 +135,58 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     return d.toLocaleDateString("es-CL")+" · "+d.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
   }
 
+  function pin(){
+    return document.getElementById("adminPin").value.trim() || sessionStorage.getItem("sportuv_admin_pin") || "";
+  }
+
+  function setStatus(msg,isError){
+    var el=document.getElementById("adminStatus");
+    el.style.display="block";
+    el.style.background=isError?"#fff0f0":"#eaf6ef";
+    el.style.borderColor=isError?"#f2c6c6":"#bfe0cb";
+    el.style.color=isError?"#8a2f2f":"#276747";
+    el.textContent=msg;
+  }
+
+  async function fetchReservations(){
+    var p=pin();
+    if(!p){
+      allReservations=[];
+      render();
+      setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
+      return;
+    }
+    sessionStorage.setItem("sportuv_admin_pin",p);
+    setStatus("Cargando reservas...",false);
+    try{
+      var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/sportuv_admin_reservations",{
+        method:"POST",
+        headers:{
+          "apikey":SUPABASE_KEY,
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({p_pin:p})
+      });
+      if(!res.ok) throw new Error(await res.text());
+      allReservations=await res.json();
+      setStatus("Reservas sincronizadas correctamente.",false);
+      render();
+    }catch(e){
+      allReservations=[];
+      render();
+      setStatus("No se pudieron cargar las reservas. Revisa el PIN e intenta nuevamente.",true);
+    }
+  }
+
   function filtered(){
     var date=document.getElementById("dateFilter").value;
     var service=document.getElementById("serviceFilter").value;
     var q=document.getElementById("searchFilter").value.trim().toLowerCase();
-    return loadReservations().filter(function(r){
-      if(date && r.day!==date) return false;
+    return allReservations.filter(function(r){
+      if(date && r.booking_date!==date) return false;
       if(service && r.service!==service) return false;
       if(q){
-        var bag=[r.name,r.email,assigned(r),serviceName(r.service),r.id].join(" ").toLowerCase();
+        var bag=[r.person_name,r.email,assigned(r),serviceName(r.service),r.booking_code].join(" ").toLowerCase();
         if(bag.indexOf(q)===-1) return false;
       }
       return true;
@@ -167,13 +202,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     current.forEach(function(r){
       var tr=document.createElement("tr");
       tr.innerHTML=
-        "<td><b>"+esc(r.name||"Sin nombre")+"</b><div class='muted'>"+esc(r.email||"")+"</div></td>"+
+        "<td><b>"+esc(r.person_name||"Sin nombre")+"</b><div class='muted'>"+esc(r.email||"")+"</div></td>"+
         "<td>"+esc(assigned(r))+"</td>"+
         "<td><span class='badge "+esc(r.service||"")+"'>"+esc(serviceName(r.service))+"</span></td>"+
-        "<td>"+esc(r.time||"")+"</td>"+
-        "<td>"+esc(r.day||"")+"</td>"+
-        "<td>"+esc(createdText(r.createdAt))+"</td>"+
-        "<td>"+esc(r.id||"")+"</td>";
+        "<td>"+esc(String(r.booking_time||"").slice(0,5))+"</td>"+
+        "<td>"+esc(r.booking_date||"")+"</td>"+
+        "<td>"+esc(createdText(r.created_at||r.client_created_at))+"</td>"+
+        "<td>"+esc(r.booking_code||"")+"</td>";
       body.appendChild(tr);
     });
 
@@ -182,7 +217,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     document.getElementById("gymCount").textContent=current.filter(function(r){return r.service==="gym"}).length;
     document.getElementById("nutCount").textContent=current.filter(function(r){return r.service==="nut"}).length;
     document.getElementById("psiCount").textContent=current.filter(function(r){return r.service==="psi"}).length;
-
     var date=document.getElementById("dateFilter").value;
     document.getElementById("tableCaption").textContent=date ? ("Reservas del "+date) : "Todas las fechas";
   }
@@ -197,7 +231,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     var lines=[headers.map(csvEscape).join(",")];
     current.forEach(function(r){
       lines.push([
-        r.name||"",r.email||"",assigned(r),serviceName(r.service),r.time||"",r.day||"",createdText(r.createdAt),r.id||""
+        r.person_name||"",r.email||"",assigned(r),serviceName(r.service),String(r.booking_time||"").slice(0,5),r.booking_date||"",createdText(r.created_at||r.client_created_at),r.booking_code||""
       ].map(csvEscape).join(","));
     });
     var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
@@ -208,23 +242,44 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }
 
+  async function clearAll(){
+    var p=pin();
+    if(!p){ setStatus("Ingresa el PIN de administrador.",true); return; }
+    if(!confirm("¿Borrar todos los registros de la base central?")) return;
+    try{
+      var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/sportuv_admin_clear_reservations",{
+        method:"POST",
+        headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+        body:JSON.stringify({p_pin:p})
+      });
+      if(!res.ok) throw new Error(await res.text());
+      await fetchReservations();
+    }catch(e){
+      setStatus("No fue posible borrar los registros.",true);
+    }
+  }
+
   document.getElementById("dateFilter").value=today();
   ["dateFilter","serviceFilter","searchFilter"].forEach(function(id){
     document.getElementById(id).addEventListener("input",render);
   });
-  document.getElementById("refreshBtn").addEventListener("click",render);
+  document.getElementById("loginAdminBtn").addEventListener("click",fetchReservations);
+  document.getElementById("refreshBtn").addEventListener("click",fetchReservations);
   document.getElementById("allDatesBtn").addEventListener("click",function(){
     document.getElementById("dateFilter").value="";render();
   });
   document.getElementById("csvBtn").addEventListener("click",exportCSV);
-  document.getElementById("clearBtn").addEventListener("click",function(){
-    if(confirm("¿Borrar todos los registros guardados en este navegador?")){
-      localStorage.removeItem(KEY);render();
-    }
-  });
-  window.addEventListener("focus",render);
-  window.addEventListener("storage",render);
-  render();
+  document.getElementById("clearBtn").addEventListener("click",clearAll);
+  document.getElementById("adminPin").addEventListener("keydown",function(e){if(e.key==="Enter")fetchReservations();});
+
+  var savedPin=sessionStorage.getItem("sportuv_admin_pin")||"";
+  if(savedPin){
+    document.getElementById("adminPin").value=savedPin;
+    fetchReservations();
+  }else{
+    render();
+    setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
+  }
 })();
 </script>
 </body>
