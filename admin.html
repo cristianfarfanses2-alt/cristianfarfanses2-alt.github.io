@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123f5a">
+<title>SPORTUV · Control de reservas</title>
+<style>
+:root{--blue:#123f5a;--blue2:#0d334a;--bg:#f3f6f8;--text:#17242d;--muted:#6b7a86;--line:#d9e2e8;--green:#2f8f63;--red:#a43d3d}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+header{background:#fff;border-bottom:1px solid var(--line);padding:18px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.brand strong{display:block;color:var(--blue);font-size:22px;letter-spacing:.05em}.brand span{font-size:13px;color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding:24px}
+h1{margin:0 0 6px;font-size:30px}.sub{color:var(--muted);margin:0 0 22px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 24px #1836460c}
+.stat b{font-size:28px;color:var(--blue);display:block}.stat span{font-size:13px;color:var(--muted)}
+.filters{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:1.2fr 1fr 1.3fr auto auto;gap:10px;align-items:end;margin-bottom:18px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px}.field input,.field select{width:100%;border:1px solid #ccd8df;border-radius:12px;padding:11px 12px;background:#fff}
+.btn{border:0;border-radius:12px;padding:11px 14px;background:var(--blue);color:#fff;font-weight:800;cursor:pointer}.btn.alt{background:#e7f0f5;color:var(--blue)}.btn.danger{background:#fff0f0;color:var(--red);border:1px solid #f2c6c6}
+.tableCard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #1836460c}
+.tableTop{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.tableTop b{font-size:18px}.muted{color:var(--muted);font-size:13px}
+.tableScroll{overflow:auto}table{width:100%;border-collapse:collapse;min-width:920px}th,td{text-align:left;padding:13px 14px;border-bottom:1px solid #edf1f3;font-size:14px;vertical-align:top}th{background:#f8fafb;color:#4a5a66;font-size:12px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}tbody tr:hover{background:#fbfdfe}
+.badge{display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#e8f1f6;color:var(--blue)}.badge.gym{background:#e7f4ed;color:#227451}.badge.nut{background:#fff2df;color:#8b5a13}.badge.psi{background:#efe9fb;color:#6545a0}
+.empty{padding:50px 20px;text-align:center;color:var(--muted)}.notice{margin-top:16px;padding:14px 16px;background:#fff8e8;border:1px solid #efd99b;border-radius:14px;color:#76580b;font-size:13px;line-height:1.45}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters .wide{grid-column:1/-1}.wrap{padding:16px}header{padding:14px 16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><strong>SPORTUV CONTROL</strong><span>Registro de reservas</span></div>
+  <button class="btn alt" id="refreshBtn">Actualizar</button>
+</header>
+
+<div class="wrap">
+  <h1>Reservas por día</h1>
+  <p class="sub">Visualiza las reservas registradas desde SPORTUV.</p>
+
+  <section class="stats">
+    <div class="stat"><b id="totalCount">0</b><span>Reservas mostradas</span></div>
+    <div class="stat"><b id="gymCount">0</b><span>Gimnasio</span></div>
+    <div class="stat"><b id="nutCount">0</b><span>Nutricionista</span></div>
+    <div class="stat"><b id="psiCount">0</b><span>Psicólogo/a</span></div>
+  </section>
+
+  <section class="filters">
+    <div class="field">
+      <label>Fecha de reserva</label>
+      <input type="date" id="dateFilter">
+    </div>
+    <div class="field">
+      <label>Servicio</label>
+      <select id="serviceFilter">
+        <option value="">Todos</option>
+        <option value="gym">Gimnasio</option>
+        <option value="nut">Nutricionista</option>
+        <option value="psi">Psicólogo/a</option>
+      </select>
+    </div>
+    <div class="field wide">
+      <label>Buscar persona, sala o lugar</label>
+      <input id="searchFilter" placeholder="Ej.: Cristian, Sala 201, Edificio EICO">
+    </div>
+    <button class="btn alt" id="allDatesBtn">Todas las fechas</button>
+    <button class="btn" id="csvBtn">Exportar CSV</button>
+  </section>
+
+  <section class="tableCard">
+    <div class="tableTop">
+      <div><b>Tabla de reservas</b><div class="muted" id="tableCaption">Mostrando reservas</div></div>
+      <button class="btn danger" id="clearBtn">Borrar registros de prueba</button>
+    </div>
+    <div class="tableScroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Sala / lugar</th>
+            <th>Servicio</th>
+            <th>Hora agendada</th>
+            <th>Fecha agendada</th>
+            <th>Reserva realizada</th>
+            <th>Código</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty">No hay reservas para los filtros seleccionados.</div>
+    </div>
+  </section>
+
+  <div class="notice">
+    <b>Importante para el prototipo:</b> esta versión está vinculada mediante el almacenamiento del navegador. Por eso el panel ve las reservas hechas en <b>este mismo navegador y dispositivo</b>. Para que el sistema reciba reservas desde todos los teléfonos de los estudiantes se necesita conectar SPORTUV a una base de datos central.
+  </div>
+</div>
+<footer>SPORTUV · Panel administrativo de demostración</footer>
+
+<script>
+(function(){
+  "use strict";
+  var KEY="sportuv_reservations";
+  var current=[];
+
+  function esc(v){
+    return String(v==null?"":v).replace(/[&<>"']/g,function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function loadReservations(){
+    try{
+      var a=JSON.parse(localStorage.getItem(KEY)||"[]");
+      return Array.isArray(a)?a:[];
+    }catch(e){return []}
+  }
+
+  function today(){
+    var d=new Date();
+    var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+    return y+"-"+m+"-"+day;
+  }
+
+  function serviceName(s){
+    if(s==="gym") return "Gimnasio";
+    if(s==="nut") return "Nutricionista";
+    if(s==="psi") return "Psicólogo/a";
+    return s||"Sin servicio";
+  }
+
+  function assigned(r){
+    if(r.assignedPlace) return r.assignedPlace;
+    if(r.room) return "Sala "+r.room;
+    if(r.location) return r.location;
+    return "Por asignar";
+  }
+
+  function createdText(v){
+    if(!v) return "Sin registro";
+    var d=new Date(v);
+    if(isNaN(d.getTime())) return v;
+    return d.toLocaleDateString("es-CL")+" · "+d.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  }
+
+  function filtered(){
+    var date=document.getElementById("dateFilter").value;
+    var service=document.getElementById("serviceFilter").value;
+    var q=document.getElementById("searchFilter").value.trim().toLowerCase();
+    return loadReservations().filter(function(r){
+      if(date && r.day!==date) return false;
+      if(service && r.service!==service) return false;
+      if(q){
+        var bag=[r.name,r.email,assigned(r),serviceName(r.service),r.id].join(" ").toLowerCase();
+        if(bag.indexOf(q)===-1) return false;
+      }
+      return true;
+    });
+  }
+
+  function render(){
+    current=filtered();
+    var body=document.getElementById("rows");
+    var empty=document.getElementById("empty");
+    body.innerHTML="";
+
+    current.forEach(function(r){
+      var tr=document.createElement("tr");
+      tr.innerHTML=
+        "<td><b>"+esc(r.name||"Sin nombre")+"</b><div class='muted'>"+esc(r.email||"")+"</div></td>"+
+        "<td>"+esc(assigned(r))+"</td>"+
+        "<td><span class='badge "+esc(r.service||"")+"'>"+esc(serviceName(r.service))+"</span></td>"+
+        "<td>"+esc(r.time||"")+"</td>"+
+        "<td>"+esc(r.day||"")+"</td>"+
+        "<td>"+esc(createdText(r.createdAt))+"</td>"+
+        "<td>"+esc(r.id||"")+"</td>";
+      body.appendChild(tr);
+    });
+
+    empty.style.display=current.length?"none":"block";
+    document.getElementById("totalCount").textContent=current.length;
+    document.getElementById("gymCount").textContent=current.filter(function(r){return r.service==="gym"}).length;
+    document.getElementById("nutCount").textContent=current.filter(function(r){return r.service==="nut"}).length;
+    document.getElementById("psiCount").textContent=current.filter(function(r){return r.service==="psi"}).length;
+
+    var date=document.getElementById("dateFilter").value;
+    document.getElementById("tableCaption").textContent=date ? ("Reservas del "+date) : "Todas las fechas";
+  }
+
+  function csvEscape(v){
+    v=String(v==null?"":v);
+    return '"'+v.replace(/"/g,'""')+'"';
+  }
+
+  function exportCSV(){
+    var headers=["Nombre","Correo","Sala o lugar","Servicio","Hora agendada","Fecha agendada","Reserva realizada","Código"];
+    var lines=[headers.map(csvEscape).join(",")];
+    current.forEach(function(r){
+      lines.push([
+        r.name||"",r.email||"",assigned(r),serviceName(r.service),r.time||"",r.day||"",createdText(r.createdAt),r.id||""
+      ].map(csvEscape).join(","));
+    });
+    var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    a.download="reservas_sportuv_"+(document.getElementById("dateFilter").value||"todas")+".csv";
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  }
+
+  document.getElementById("dateFilter").value=today();
+  ["dateFilter","serviceFilter","searchFilter"].forEach(function(id){
+    document.getElementById(id).addEventListener("input",render);
+  });
+  document.getElementById("refreshBtn").addEventListener("click",render);
+  document.getElementById("allDatesBtn").addEventListener("click",function(){
+    document.getElementById("dateFilter").value="";render();
+  });
+  document.getElementById("csvBtn").addEventListener("click",exportCSV);
+  document.getElementById("clearBtn").addEventListener("click",function(){
+    if(confirm("¿Borrar todos los registros guardados en este navegador?")){
+      localStorage.removeItem(KEY);render();
+    }
+  });
+  window.addEventListener("focus",render);
+  window.addEventListener("storage",render);
+  render();
+})();
+</script>
+</body>
+</html>
