@@ -70,7 +70,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   <section class="tableCard">
     <div class="tableTop">
       <div><b>Tabla de reservas</b><div class="muted" id="tableCaption">Mostrando reservas</div></div>
-      <button class="btn danger" id="clearBtn">Borrar registros de prueba</button>
+      <button class="btn danger" id="clearBtn">Borrar todos los registros</button>
     </div>
     <div class="tableScroll">
       <table>
@@ -83,6 +83,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
             <th>Fecha agendada</th>
             <th>Reserva realizada</th>
             <th>Código</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -208,7 +209,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
         "<td>"+esc(String(r.booking_time||"").slice(0,5))+"</td>"+
         "<td>"+esc(r.booking_date||"")+"</td>"+
         "<td>"+esc(createdText(r.created_at||r.client_created_at))+"</td>"+
-        "<td>"+esc(r.booking_code||"")+"</td>";
+        "<td>"+esc(r.booking_code||"")+"</td>"+
+        "<td><button class='btn danger rowDelete' data-code='"+esc(r.booking_code||"")+"'>Eliminar</button></td>";
       body.appendChild(tr);
     });
 
@@ -242,6 +244,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }
 
+  async function archiveOne(code){
+    var p=pin();
+    if(!p){ setStatus("Ingresa el PIN de administrador.",true); return; }
+    if(!confirm("¿Eliminar la reserva "+code+" del panel?")) return;
+    try{
+      var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/sportuv_admin_archive_reservation",{
+        method:"POST",
+        headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+        body:JSON.stringify({p_pin:p,p_booking_code:code})
+      });
+      if(!res.ok) throw new Error(await res.text());
+      setStatus("Reserva "+code+" eliminada del panel.",false);
+      await fetchReservations();
+    }catch(e){
+      setStatus("No fue posible eliminar la reserva.",true);
+    }
+  }
+
   async function clearAll(){
     var p=pin();
     if(!p){ setStatus("Ingresa el PIN de administrador.",true); return; }
@@ -270,6 +290,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   });
   document.getElementById("csvBtn").addEventListener("click",exportCSV);
   document.getElementById("clearBtn").addEventListener("click",clearAll);
+  document.getElementById("rows").addEventListener("click",function(e){
+    var btn=e.target.closest(".rowDelete");
+    if(btn) archiveOne(btn.getAttribute("data-code"));
+  });
   document.getElementById("adminPin").addEventListener("keydown",function(e){if(e.key==="Enter")fetchReservations();});
 
   var savedPin=sessionStorage.getItem("sportuv_admin_pin")||"";
