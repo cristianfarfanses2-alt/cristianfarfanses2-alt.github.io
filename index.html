@@ -88,7 +88,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var NUTRITIONISTS = ["Camila Soto","Daniela Rojas","Felipe Araya","Valentina Morales","Sebastián Muñoz"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101","102","201","202","301","302","401","402"];
 
-  var state = { view:"login", user:"", service:null, day:null, time:null, booking:null };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -119,6 +119,8 @@ h1{font-size:27px;margin:4px 0 8px}
         '<div class="logo">SPORTUV</div>'+
         '<div class="tag">“Activa tu cuerpo, despeja tu mente”</div>'+
         '<form id="loginForm">'+
+          '<label for="fullName">Nombre completo</label>'+
+          '<input id="fullName" class="field" type="text" autocomplete="name" placeholder="Nombre y apellido" value="'+esc(state.name)+'">'+
           '<label for="email">Correo institucional</label>'+
           '<input id="email" class="field" type="email" inputmode="email" autocomplete="email" placeholder="nombre@uv.cl" value="'+esc(state.user)+'">'+
           '<label for="password">Contraseña</label>'+
@@ -127,7 +129,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión gimnasio salas 10:45</p>'+
+        '<p class="small version">SPORTUV · versión reservas vinculadas 11:30</p>'+
       '</section>';
   }
 
@@ -147,7 +149,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>';
     });
 
-    var displayName = state.user ? state.user.split("@")[0] : "estudiante";
+    var displayName = state.name ? state.name.split(" ")[0] : (state.user ? state.user.split("@")[0] : "estudiante");
     app.innerHTML = header()+
       '<main>'+
         '<h1>Hola, '+esc(displayName)+' 👋</h1>'+
@@ -255,7 +257,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión gimnasio salas 10:45</p>'+
+        '<p class="small version">SPORTUV · versión reservas vinculadas 11:30</p>'+
       '</main>';
   }
 
@@ -267,13 +269,16 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function submitLogin(){
+    var fullName = (document.getElementById("fullName").value || "").trim();
     var email = (document.getElementById("email").value || "").trim().toLowerCase();
     var password = document.getElementById("password").value || "";
-    if(!email.endsWith("@uv.cl") || password.length < 4){
-      document.getElementById("loginError").innerHTML = '<div class="error">Usa un correo @uv.cl y una contraseña de al menos 4 caracteres.</div>';
+    if(fullName.length < 3 || !email.endsWith("@uv.cl") || password.length < 4){
+      document.getElementById("loginError").innerHTML = '<div class="error">Ingresa tu nombre, un correo @uv.cl y una contraseña de al menos 4 caracteres.</div>';
       return;
     }
+    state.name = fullName;
     state.user = email;
+    save("sportuv_user_name",fullName);
     save("sportuv_user",email);
     state.view = "home";
     render();
@@ -282,9 +287,12 @@ h1{font-size:27px;margin:4px 0 8px}
   function confirmBooking(){
     var b = {
       id: "SUV-"+String(Date.now()).slice(-6),
+      name: state.name || "Sin nombre",
+      email: state.user || "",
       service: state.service,
       day: state.day,
-      time: state.time
+      time: state.time,
+      createdAt: new Date().toISOString()
     };
 
     if(b.service==="nut"){
@@ -293,7 +301,20 @@ h1{font-size:27px;margin:4px 0 8px}
     }
     if(b.service==="gym"){
       b.room = randomItem(GYM_ROOMS);
+      b.assignedPlace = "Sala " + b.room;
     }
+    if(b.service==="nut"){
+      b.assignedPlace = b.location;
+    }
+    if(b.service==="psi"){
+      b.assignedPlace = "Por asignar";
+    }
+
+    var stored = [];
+    try{ stored = JSON.parse(load("sportuv_reservations") || "[]"); }catch(e){ stored = []; }
+    if(!Array.isArray(stored)) stored = [];
+    stored.unshift(b);
+    save("sportuv_reservations", JSON.stringify(stored));
 
     state.booking = b;
     state.view = "done";
@@ -354,6 +375,7 @@ h1{font-size:27px;margin:4px 0 8px}
   });
 
   state.user = load("sportuv_user");
+  state.name = load("sportuv_user_name");
   render();
 })();
 </script>
