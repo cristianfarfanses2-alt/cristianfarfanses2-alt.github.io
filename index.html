@@ -133,7 +133,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión base central 11:55</p>'+
+        '<p class="small version">SPORTUV · versión horarios en tiempo real</p>'+
       '</section>';
   }
 
@@ -186,20 +186,61 @@ h1{font-size:27px;margin:4px 0 8px}
     return ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"];
   }
 
+  function localDateKey(date){
+    var y=date.getFullYear();
+    var m=String(date.getMonth()+1).padStart(2,"0");
+    var d=String(date.getDate()).padStart(2,"0");
+    return y+"-"+m+"-"+d;
+  }
+
+  function slotDateTime(dayKey,time){
+    var parts=dayKey.split("-");
+    var hm=time.split(":");
+    return new Date(
+      Number(parts[0]),
+      Number(parts[1])-1,
+      Number(parts[2]),
+      Number(hm[0]),
+      Number(hm[1]),
+      0,
+      0
+    );
+  }
+
+  function isSlotAvailable(dayKey,time){
+    return slotDateTime(dayKey,time).getTime() > Date.now();
+  }
+
+  function availableTimesForDay(service,dayKey){
+    return getTimes(service).filter(function(t){
+      return isSlotAvailable(dayKey,t);
+    });
+  }
+
   function renderBooking(){
     var s = SERVICES[state.service];
     var days = getDays();
-    var times = getTimes(state.service);
+    var times = state.day ? availableTimesForDay(state.service,state.day) : [];
     var dayHtml = "";
     var timeHtml = "";
+
+    if(state.day && state.time && !isSlotAvailable(state.day,state.time)){
+      state.time = null;
+    }
 
     days.forEach(function(d){
       dayHtml += '<button type="button" class="day '+(state.day===d.key?'selected':'')+'" data-day="'+d.key+'"><b>'+d.number+'</b><br><span class="small">'+esc(d.weekday)+'</span></button>';
     });
 
-    times.forEach(function(t){
-      timeHtml += '<button type="button" class="slot '+(state.time===t?'selected':'')+'" data-time="'+t+'">'+t+'</button>';
-    });
+    if(!state.day){
+      timeHtml = '<div class="small" style="grid-column:1/-1;padding:8px 2px">Primero selecciona un día.</div>';
+    }else if(!times.length){
+      timeHtml = '<div class="small" style="grid-column:1/-1;padding:8px 2px">Ya no quedan horarios disponibles para este día.</div>';
+    }else{
+      times.forEach(function(t){
+        timeHtml += '<button type="button" class="slot '+(state.time===t?'selected':'')+'" data-time="'+t+'">'+t+'</button>';
+      });
+    }
 
     app.innerHTML = header()+
       '<main>'+
@@ -261,7 +302,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión base central 11:55</p>'+
+        '<p class="small version">SPORTUV · versión horarios en tiempo real</p>'+
       '</main>';
   }
 
@@ -271,6 +312,15 @@ h1{font-size:27px;margin:4px 0 8px}
     if(state.view==="booking") return renderBooking();
     if(state.view==="done") return renderDone();
   }
+
+  setInterval(function(){
+    if(state.view==="booking" && state.day){
+      if(state.time && !isSlotAvailable(state.day,state.time)){
+        state.time = null;
+      }
+      renderBooking();
+    }
+  },30000);
 
   function submitLogin(){
     var fullName = (document.getElementById("fullName").value || "").trim();
@@ -289,6 +339,13 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   async function confirmBooking(){
+    if(!state.day || !state.time || !isSlotAvailable(state.day,state.time)){
+      state.time = null;
+      render();
+      alert("Ese horario ya pasó o dejó de estar disponible. Selecciona otro horario.");
+      return;
+    }
+
     var b = {
       id: "SUV-"+String(Date.now()).slice(-6),
       name: state.name || "Sin nombre",
