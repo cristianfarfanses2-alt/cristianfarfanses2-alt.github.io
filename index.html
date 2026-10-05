@@ -52,6 +52,14 @@ h1{font-size:27px;margin:4px 0 8px}
 .qrCard{background:#fff;border-radius:18px;padding:12px;text-align:center;box-shadow:0 8px 24px #18364612}
 .qrCard h3{font-size:16px;margin:0 0 9px}
 .qrCard img{width:100%;max-width:150px;aspect-ratio:1/1;object-fit:contain;background:#fff}
+.historyTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.historyTab{border:0;border-radius:12px;padding:10px 8px;font-weight:800;background:#eef3f6;color:var(--blue)}
+.historyTab.active{background:var(--blue);color:#fff}
+.serviceIcon{font-size:22px;line-height:1;margin-right:8px}
+.historyTitle{display:flex;align-items:center}
+.roomGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.roomOcc{background:#f4f7f9;border-radius:12px;padding:10px;font-size:13px}
+.roomOcc.full{background:#fff1f1;color:#8e3131}
 .historyCard{background:#fff;border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 8px 24px #18364612}
 .historyTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .status{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800}
@@ -102,7 +110,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101","102","201","202","301","302","401","402"];
 
-  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, gymAvailability:{}, professionalAvailability:{} };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{} };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -328,7 +336,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión lista de espera v7</p>'+
+        '<p class="small version">SPORTUV · versión reservas visual v8</p>'+
       '</section>';
   }
 
@@ -479,6 +487,16 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         '<div class="panel"><b>1. Selecciona el día</b><div class="grid">'+dayHtml+'</div></div>'+
         '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
+        (state.service==="gym" && state.day && state.time ? (function(){
+          var rows=state.gymRoomOccupancy[state.day+"|"+state.time];
+          if(!rows) return '<div class="panel"><b>Ocupación por sala</b><div class="small">Consultando ocupación…</div></div>';
+          var html='<div class="panel"><b>Ocupación por sala</b><div class="roomGrid">';
+          rows.forEach(function(r){
+            html+='<div class="roomOcc '+(Number(r.remaining)<=0?'full':'')+'"><b>Sala '+esc(r.room)+'</b><br>'+esc(r.occupied)+'/5 ocupados</div>';
+          });
+          html+='</div></div>';
+          return html;
+        })() : '')+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
@@ -548,8 +566,22 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión lista de espera v7</p>'+
+        '<p class="small version">SPORTUV · versión reservas visual v8</p>'+
       '</main>';
+  }
+
+  function serviceIcon(code){
+    return code==="gym" ? "🏋️" : code==="nut" ? "🥗" : "🧠";
+  }
+
+  async function loadGymRoomOccupancy(dayKey,time){
+    if(!dayKey || !time) return;
+    var key=dayKey+"|"+time;
+    try{
+      var rows=await rpc("sportuv_gym_room_occupancy",{p_booking_date:dayKey,p_booking_time:time});
+      state.gymRoomOccupancy[key]=rows||[];
+      if(state.view==="booking" && state.service==="gym" && state.day===dayKey && state.time===time) renderBooking();
+    }catch(e){}
   }
 
   function serviceLabel(code){
@@ -557,17 +589,26 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function renderHistory(){
+    var tab=state.historyTab||"upcoming";
     var body="";
+    var tabs=
+      '<div class="historyTabs">'+
+        '<button class="historyTab '+(tab==="upcoming"?'active':'')+'" data-history-tab="upcoming">Próximas</button>'+
+        '<button class="historyTab '+(tab==="past"?'active':'')+'" data-history-tab="past">Historial</button>'+
+        '<button class="historyTab '+(tab==="waitlist"?'active':'')+'" data-history-tab="waitlist">Lista de espera</button>'+
+      '</div>';
+
     if(state.historyLoading){
-      body='<div class="panel">Cargando historial…</div>';
-    }else{
-      if(state.waitlist.length){
-        body+='<h2 style="margin:18px 0 8px">Lista de espera</h2>';
+      body='<div class="panel">Cargando reservas…</div>';
+    }else if(tab==="waitlist"){
+      if(!state.waitlist.length){
+        body='<div class="panel"><b>No estás en ninguna lista de espera.</b></div>';
+      }else{
         state.waitlist.forEach(function(w){
           body+=
             '<div class="historyCard">'+
               '<div class="historyTop">'+
-                '<div><b>Gimnasio SPORTUV</b><div class="small">'+esc(w.booking_date)+' · '+esc(String(w.booking_time).slice(0,5))+'</div></div>'+
+                '<div class="historyTitle"><span class="serviceIcon">🏋️</span><div><b>Gimnasio SPORTUV</b><div class="small">'+esc(w.booking_date)+' · '+esc(String(w.booking_time).slice(0,5))+'</div></div></div>'+
                 '<span class="status active">En espera · #'+esc(w.queue_position)+'</span>'+
               '</div>'+
               '<p class="small">Si se libera un cupo, se asignará automáticamente siguiendo el orden de la lista.</p>'+
@@ -575,21 +616,28 @@ h1{font-size:27px;margin:4px 0 8px}
             '</div>';
         });
       }
+    }else{
+      var filtered=state.history.filter(function(r){
+        var cancelled=!!r.deleted_at;
+        var future=isSlotAvailable(r.booking_date,String(r.booking_time).slice(0,5));
+        return tab==="upcoming" ? (!cancelled && future) : (cancelled || !future);
+      });
 
-      if(!state.history.length){
-        if(!state.waitlist.length) body='<div class="panel"><b>Aún no tienes reservas.</b><p class="small">Cuando realices una reserva aparecerá aquí.</p></div>';
+      if(!filtered.length){
+        body='<div class="panel"><b>'+(tab==="upcoming"?'No tienes próximas reservas.':'Aún no tienes reservas anteriores o canceladas.')+'</b></div>';
       }else{
-        body+='<h2 style="margin:18px 0 8px">Reservas</h2>';
-        state.history.forEach(function(r){
+        filtered.forEach(function(r){
           var cancelled=!!r.deleted_at;
           var future=isSlotAvailable(r.booking_date,String(r.booking_time).slice(0,5));
           var canCancel=!cancelled && future && canCancelReservation(r.booking_date,r.booking_time);
           var tooLate=!cancelled && future && !canCancel;
+          var statusText=cancelled ? 'Cancelada' : (future ? 'Confirmada' : 'Completada');
+          var statusClass=cancelled ? 'cancelled' : 'active';
           body +=
             '<div class="historyCard">'+
               '<div class="historyTop">'+
-                '<div><b>'+esc(serviceLabel(r.service))+'</b><div class="small">'+esc(r.booking_date)+' · '+esc(String(r.booking_time).slice(0,5))+'</div></div>'+
-                '<span class="status '+(cancelled?'cancelled':'active')+'">'+(cancelled?'Cancelada':'Confirmada')+'</span>'+
+                '<div class="historyTitle"><span class="serviceIcon">'+serviceIcon(r.service)+'</span><div><b>'+esc(serviceLabel(r.service))+'</b><div class="small">'+esc(r.booking_date)+' · '+esc(String(r.booking_time).slice(0,5))+'</div></div></div>'+
+                '<span class="status '+statusClass+'">'+statusText+'</span>'+
               '</div>'+
               '<div class="small" style="margin-top:8px">'+
                 (r.assigned_place ? 'Lugar: <b>'+esc(r.assigned_place)+'</b><br>' : '')+
@@ -605,8 +653,9 @@ h1{font-size:27px;margin:4px 0 8px}
 
     app.innerHTML = header()+
       '<main>'+
-        '<h1>Historial de reservas</h1>'+
-        '<p class="sub">Revisa tus reservas y listas de espera. Las cancelaciones desde la app se permiten hasta 1 hora antes.</p>'+
+        '<h1>Mis reservas</h1>'+
+        '<p class="sub">Consulta tus próximas horas, tu historial y tu lista de espera.</p>'+
+        tabs+
         body+
       '</main>';
   }
@@ -748,6 +797,13 @@ h1{font-size:27px;margin:4px 0 8px}
   });
 
   document.addEventListener("click",function(e){
+    var historyTab=e.target.closest("[data-history-tab]");
+    if(historyTab){
+      state.historyTab=historyTab.getAttribute("data-history-tab");
+      renderHistory();
+      return;
+    }
+
     var waitBtn=e.target.closest("[data-wait-time]");
     if(waitBtn){
       joinWaitlist(state.day,waitBtn.getAttribute("data-wait-time"));
@@ -789,6 +845,7 @@ h1{font-size:27px;margin:4px 0 8px}
     var time = e.target.closest("[data-time]");
     if(time){
       state.time = time.getAttribute("data-time");
+      if(state.service==="gym") loadGymRoomOccupancy(state.day,state.time);
       render();
       return;
     }
@@ -806,6 +863,7 @@ h1{font-size:27px;margin:4px 0 8px}
         render();
       }
       if(a==="history"){
+        state.historyTab="upcoming";
         state.view = "history";
         render();
         loadHistory();
