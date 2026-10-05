@@ -336,7 +336,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión sala 101 aforo 10 v9</p>'+
+        '<p class="small version">SPORTUV · versión sala 101 aforo 10 v10</p>'+
       '</section>';
   }
 
@@ -492,7 +492,7 @@ h1{font-size:27px;margin:4px 0 8px}
           if(!rows) return '<div class="panel"><b>Ocupación por sala</b><div class="small">Consultando ocupación…</div></div>';
           var html='<div class="panel"><b>Ocupación por sala</b><div class="roomGrid">';
           rows.forEach(function(r){
-            html+='<div class="roomOcc '+(Number(r.remaining)<=0?'full':'')+'"><b>Sala '+esc(r.room)+'</b><br>'+esc(r.occupied)+'/10 ocupados</div>';
+            html+='<div class="roomOcc '+(Number(r.remaining)<=0?'full':'')+'"><b>Sala '+esc(r.room)+'</b><br>'+esc(r.occupied)+'/'+esc(r.capacity||10)+' ocupados</div>';
           });
           html+='</div></div>';
           return html;
