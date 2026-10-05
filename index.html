@@ -90,6 +90,7 @@ h1{font-size:27px;margin:4px 0 8px}
   };
 
   var NUTRITIONISTS = ["Camila Soto","Daniela Rojas","Felipe Araya","Valentina Morales","Sebastián Muñoz"];
+  var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101","102","201","202","301","302","401","402"];
 
   var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null };
@@ -133,7 +134,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión horarios Chile v2</p>'+
+        '<p class="small version">SPORTUV · versión psicólogo aleatorio v3</p>'+
       '</section>';
   }
 
@@ -296,6 +297,16 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>';
     }
 
+    if(b.service==="psi"){
+      extra =
+        '<div class="info">'+
+          '<b>🧠 Hora con psicólogo/a</b>'+
+          '<p>Tu hora quedó agendada con <strong>'+esc(b.professional)+'</strong>.</p>'+
+          '<p>Debes presentarte en <strong>'+esc(b.location)+'</strong> el día y hora indicados.</p>'+
+          '<p class="small">Los nombres mostrados son ficticios y se usan únicamente para demostrar el funcionamiento del prototipo.</p>'+
+        '</div>';
+    }
+
     app.innerHTML = header()+
       '<main class="done">'+
         '<div class="tick">✓</div>'+
@@ -309,7 +320,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión horarios Chile v2</p>'+
+        '<p class="small version">SPORTUV · versión psicólogo aleatorio v3</p>'+
       '</main>';
   }
 
@@ -375,7 +386,9 @@ h1{font-size:27px;margin:4px 0 8px}
       b.assignedPlace = b.location;
     }
     if(b.service==="psi"){
-      b.assignedPlace = "Por asignar";
+      b.professional = randomItem(PSYCHOLOGISTS);
+      b.location = randomItem(LOCATIONS);
+      b.assignedPlace = b.location;
     }
 
     var payload = {
