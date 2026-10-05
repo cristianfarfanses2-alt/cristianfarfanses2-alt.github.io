@@ -133,7 +133,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión horarios en tiempo real</p>'+
+        '<p class="small version">SPORTUV · versión horarios Chile v2</p>'+
       '</section>';
   }
 
@@ -186,29 +186,36 @@ h1{font-size:27px;margin:4px 0 8px}
     return ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"];
   }
 
-  function localDateKey(date){
-    var y=date.getFullYear();
-    var m=String(date.getMonth()+1).padStart(2,"0");
-    var d=String(date.getDate()).padStart(2,"0");
-    return y+"-"+m+"-"+d;
-  }
+  function chileNow(){
+    var parts = new Intl.DateTimeFormat("en-CA",{
+      timeZone:"America/Santiago",
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit",
+      hourCycle:"h23"
+    }).formatToParts(new Date());
 
-  function slotDateTime(dayKey,time){
-    var parts=dayKey.split("-");
-    var hm=time.split(":");
-    return new Date(
-      Number(parts[0]),
-      Number(parts[1])-1,
-      Number(parts[2]),
-      Number(hm[0]),
-      Number(hm[1]),
-      0,
-      0
-    );
+    var out={};
+    parts.forEach(function(p){
+      if(p.type!=="literal") out[p.type]=p.value;
+    });
+
+    return {
+      dayKey: out.year+"-"+out.month+"-"+out.day,
+      minutes: Number(out.hour)*60 + Number(out.minute)
+    };
   }
 
   function isSlotAvailable(dayKey,time){
-    return slotDateTime(dayKey,time).getTime() > Date.now();
+    var now = chileNow();
+    if(dayKey > now.dayKey) return true;
+    if(dayKey < now.dayKey) return false;
+
+    var hm=time.split(":");
+    var slotMinutes=Number(hm[0])*60+Number(hm[1]);
+    return slotMinutes > now.minutes;
   }
 
   function availableTimesForDay(service,dayKey){
@@ -302,7 +309,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión horarios en tiempo real</p>'+
+        '<p class="small version">SPORTUV · versión horarios Chile v2</p>'+
       '</main>';
   }
 
