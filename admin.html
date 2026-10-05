@@ -13,7 +13,17 @@ header{background:#fff;border-bottom:1px solid var(--line);padding:18px 22px;dis
 .brand strong{display:block;color:var(--blue);font-size:22px;letter-spacing:.05em}.brand span{font-size:13px;color:var(--muted)}
 .wrap{max-width:1180px;margin:0 auto;padding:24px}
 h1{margin:0 0 6px;font-size:30px}.sub{color:var(--muted);margin:0 0 22px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.dashboardGrid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-bottom:20px}
+.dashCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px #1836460c}
+.dashCard h2{margin:0 0 12px;font-size:18px}
+.barRow{display:grid;grid-template-columns:70px 1fr 42px;gap:10px;align-items:center;margin:10px 0}
+.barTrack{height:10px;background:#edf2f5;border-radius:999px;overflow:hidden}
+.barFill{height:100%;background:var(--blue);border-radius:999px}
+.serviceList{display:grid;gap:10px}.serviceItem{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:#f7f9fa;border-radius:12px}
+.waitCard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #1836460c;margin-bottom:20px}
+.waitTop{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.waitList{padding:8px 18px 14px}.waitItem{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf1f3}.waitItem:last-child{border-bottom:0}
 .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 8px 24px #1836460c}
 .stat b{font-size:28px;color:var(--blue);display:block}.stat span{font-size:13px;color:var(--muted)}
 .filters{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:1.2fr 1fr 1.3fr auto auto;gap:10px;align-items:end;margin-bottom:18px}
@@ -25,7 +35,7 @@ h1{margin:0 0 6px;font-size:30px}.sub{color:var(--muted);margin:0 0 22px}
 .badge{display:inline-block;padding:6px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#e8f1f6;color:var(--blue)}.badge.gym{background:#e7f4ed;color:#227451}.badge.nut{background:#fff2df;color:#8b5a13}.badge.psi{background:#efe9fb;color:#6545a0}
 .empty{padding:50px 20px;text-align:center;color:var(--muted)}.notice{margin-top:16px;padding:14px 16px;background:#fff8e8;border:1px solid #efd99b;border-radius:14px;color:#76580b;font-size:13px;line-height:1.45}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
-@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters .wide{grid-column:1/-1}.wrap{padding:16px}header{padding:14px 16px}}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.dashboardGrid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.filters .wide{grid-column:1/-1}.wrap{padding:16px}header{padding:14px 16px}}
 </style>
 </head>
 <body>
@@ -39,10 +49,21 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   <p class="sub">Visualiza las reservas registradas desde SPORTUV en la base de datos central.</p><div id="liveSync" class="notice" style="margin:0 0 10px;background:#eaf6ef;border-color:#bfe0cb;color:#276747"><b>● Sincronización automática</b> · actualiza nuevas reservas cada 3 segundos.</div><div id="adminStatus" class="notice" style="display:none;margin:0 0 16px"></div>
 
   <section class="stats">
-    <div class="stat"><b id="totalCount">0</b><span>Reservas mostradas</span></div>
-    <div class="stat"><b id="gymCount">0</b><span>Gimnasio</span></div>
-    <div class="stat"><b id="nutCount">0</b><span>Nutricionista</span></div>
-    <div class="stat"><b id="psiCount">0</b><span>Psicólogo/a</span></div>
+    <div class="stat"><b id="activeToday">0</b><span>Reservas activas</span></div>
+    <div class="stat"><b id="occupancyToday">0%</b><span>Ocupación diaria gimnasio</span></div>
+    <div class="stat"><b id="cancelledToday">0</b><span>Cancelaciones</span></div>
+    <div class="stat"><b id="waitingToday">0</b><span>Lista de espera</span></div>
+    <div class="stat"><b id="topServiceToday">—</b><span>Servicio más solicitado</span></div>
+  </section>
+
+  <section class="dashboardGrid">
+    <div class="dashCard"><h2>Horas más reservadas</h2><div id="topHours"><div class="muted">Sin datos todavía.</div></div></div>
+    <div class="dashCard"><h2>Reservas por servicio</h2><div class="serviceList" id="serviceStats"></div></div>
+  </section>
+
+  <section class="waitCard">
+    <div class="waitTop"><div><b>Lista de espera activa</b><div class="muted">Personas esperando cupo en gimnasio</div></div><span class="badge gym" id="waitlistCount">0</span></div>
+    <div class="waitList" id="adminWaitlist"><div class="muted" style="padding:10px 0">Sin personas en espera.</div></div>
   </section>
 
   <section class="filters">
@@ -95,17 +116,27 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     <b>Base central activa:</b> este panel consulta Supabase automáticamente cada 3 segundos y muestra reservas realizadas desde distintos teléfonos y computadores.
   </div>
 </div>
-<footer>SPORTUV · Panel administrativo de demostración</footer>
+<footer>SPORTUV · Panel administrativo con estadísticas</footer>
 
 <script>
 (function(){
   "use strict";
   var SUPABASE_URL="https://calpquedjzbouzwmpcvi.supabase.co";
-  var SUPABASE_KEY="sb_publishable_PvNoi_wpr8ZiM4aPzJv_Wg_qQni3t9P";
+  var SUPABASE_KEY="";
   var current=[];
   var allReservations=[];
+  var dashboardStats=null;
+  var adminWaitlist=[];
   var syncTimer=null;
   var loading=false;
+
+  async function ensureConfig(){
+    if(SUPABASE_KEY) return;
+    var html=await fetch("/index.html",{cache:"no-store"}).then(function(r){return r.text();});
+    var m=html.match(/var SUPABASE_KEY\s*=\s*"([^"]+)"/);
+    if(!m) throw new Error("No se pudo cargar la configuración de SPORTUV.");
+    SUPABASE_KEY=m[1];
+  }
 
   function esc(v){
     return String(v==null?"":v).replace(/[&<>"']/g,function(c){
@@ -150,8 +181,70 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     el.textContent=msg;
   }
 
+  async function adminRpc(name,payload){
+    await ensureConfig();
+    var p=pin();
+    if(!p) throw new Error("PIN requerido");
+    var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/"+name,{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify(Object.assign({p_pin:p},payload||{}))
+    });
+    if(!res.ok) throw new Error(await res.text());
+    return await res.json();
+  }
+
+  async function fetchDashboard(silent){
+    if(!pin()){ dashboardStats=null; adminWaitlist=[]; renderDashboard(); return; }
+    var date=document.getElementById("dateFilter").value||null;
+    try{
+      var results=await Promise.all([
+        adminRpc("sportuv_admin_stats",{p_date:date}),
+        adminRpc("sportuv_admin_waitlist",{})
+      ]);
+      dashboardStats=results[0]||null;
+      adminWaitlist=results[1]||[];
+      renderDashboard();
+    }catch(e){
+      if(!silent) setStatus("No se pudieron cargar las estadísticas del panel.",true);
+    }
+  }
+
+  function serviceNameShort(s){
+    return s==="gym"?"Gimnasio":s==="nut"?"Nutrición":s==="psi"?"Psicología":"—";
+  }
+
+  function renderDashboard(){
+    var s=dashboardStats||{};
+    document.getElementById("activeToday").textContent=s.active_reservations||0;
+    document.getElementById("occupancyToday").textContent=(s.gym_occupancy_percent||0)+"%";
+    document.getElementById("cancelledToday").textContent=s.cancelled||0;
+    document.getElementById("waitingToday").textContent=s.waiting||0;
+    document.getElementById("topServiceToday").textContent=s.top_service?serviceNameShort(s.top_service):"—";
+    var hours=Array.isArray(s.top_hours)?s.top_hours:[];
+    var max=hours.reduce(function(m,x){return Math.max(m,Number(x.count||0));},0)||1;
+    var hoursHtml="";
+    hours.forEach(function(x){
+      var pct=Math.round((Number(x.count||0)/max)*100);
+      hoursHtml+='<div class="barRow"><b>'+esc(x.time)+'</b><div class="barTrack"><div class="barFill" style="width:'+pct+'%"></div></div><span>'+esc(x.count)+'</span></div>';
+    });
+    document.getElementById("topHours").innerHTML=hoursHtml||'<div class="muted">Sin datos para esta fecha.</div>';
+    var sc=s.service_counts||{};
+    document.getElementById("serviceStats").innerHTML=
+      '<div class="serviceItem"><span>🏋️ Gimnasio</span><b>'+esc(sc.gym||0)+'</b></div>'+
+      '<div class="serviceItem"><span>🥗 Nutrición</span><b>'+esc(sc.nut||0)+'</b></div>'+
+      '<div class="serviceItem"><span>🧠 Psicología</span><b>'+esc(sc.psi||0)+'</b></div>';
+    var waitHtml="";
+    adminWaitlist.forEach(function(w){
+      waitHtml+='<div class="waitItem"><div><b>'+esc(w.person_name||"Sin nombre")+'</b><div class="muted">'+esc(w.email||"")+'</div></div><div style="text-align:right"><b>'+esc(String(w.booking_time||"").slice(0,5))+'</b><div class="muted">'+esc(w.booking_date||"")+' · posición #'+esc(w.queue_position||"")+'</div></div></div>';
+    });
+    document.getElementById("adminWaitlist").innerHTML=waitHtml||'<div class="muted" style="padding:10px 0">Sin personas en espera.</div>';
+    document.getElementById("waitlistCount").textContent=adminWaitlist.length;
+  }
+
   async function fetchReservations(silent){
     if(loading) return;
+    await ensureConfig();
     var p=pin();
     if(!p){
       allReservations=[];
@@ -175,6 +268,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
       allReservations=await res.json();
       if(!silent) setStatus("Reservas sincronizadas correctamente. Actualización automática activa.",false);
       render();
+      fetchDashboard(true);
     }catch(e){
       if(!silent){
         allReservations=[];
@@ -188,7 +282,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 
   function startAutoSync(){
     if(syncTimer) clearInterval(syncTimer);
-    syncTimer=setInterval(function(){ fetchReservations(true); },3000);
+    syncTimer=setInterval(function(){ fetchReservations(true); fetchDashboard(true); },3000);
   }
 
   function filtered(){
@@ -227,10 +321,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     });
 
     empty.style.display=current.length?"none":"block";
-    document.getElementById("totalCount").textContent=current.length;
-    document.getElementById("gymCount").textContent=current.filter(function(r){return r.service==="gym"}).length;
-    document.getElementById("nutCount").textContent=current.filter(function(r){return r.service==="nut"}).length;
-    document.getElementById("psiCount").textContent=current.filter(function(r){return r.service==="psi"}).length;
     var date=document.getElementById("dateFilter").value;
     document.getElementById("tableCaption").textContent=date ? ("Reservas del "+date) : "Todas las fechas";
   }
@@ -276,13 +366,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 
 
   document.getElementById("dateFilter").value="";
-  ["dateFilter","serviceFilter","searchFilter"].forEach(function(id){
-    document.getElementById(id).addEventListener("input",render);
-  });
-  document.getElementById("loginAdminBtn").addEventListener("click",function(){ fetchReservations(false); startAutoSync(); });
-  document.getElementById("refreshBtn").addEventListener("click",function(){ fetchReservations(false); });
+  ["serviceFilter","searchFilter"].forEach(function(id){document.getElementById(id).addEventListener("input",render);});
+  document.getElementById("dateFilter").addEventListener("input",function(){render();fetchDashboard(true);});
+  document.getElementById("loginAdminBtn").addEventListener("click",function(){ fetchReservations(false); fetchDashboard(false); startAutoSync(); });
+  document.getElementById("refreshBtn").addEventListener("click",function(){ fetchReservations(false); fetchDashboard(false); });
   document.getElementById("allDatesBtn").addEventListener("click",function(){
-    document.getElementById("dateFilter").value="";render();
+    document.getElementById("dateFilter").value="";render();fetchDashboard(true);
   });
   document.getElementById("csvBtn").addEventListener("click",exportCSV);
   document.getElementById("rows").addEventListener("click",function(e){
@@ -295,9 +384,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   if(savedPin){
     document.getElementById("adminPin").value=savedPin;
     fetchReservations(false);
+    fetchDashboard(false);
     startAutoSync();
   }else{
     render();
+    renderDashboard();
     setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
   }
 })();
