@@ -28,8 +28,8 @@ main{padding:22px}
 h1{font-size:27px;margin:4px 0 8px}
 .sub{color:var(--muted);margin:0 0 18px}
 .card{position:relative;height:190px;border-radius:20px;overflow:hidden;margin:15px 0;background:#31434e;box-shadow:0 12px 30px #0002}
-.card img,.hero img{width:100%;height:100%;object-fit:cover}
-.shade{position:absolute;inset:0;background:linear-gradient(transparent,#000c)}
+.card img,.hero img{width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.06) brightness(.9)}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,#0d334a12 5%,#07151f2b 45%,#07151fd9 100%)}
 .cardText{position:absolute;left:18px;right:18px;bottom:15px;color:#fff;z-index:2}
 .cardText h2{margin:0 0 5px}
 .pill{display:inline-block;margin-top:8px;padding:8px 11px;border-radius:999px;background:#fff;color:var(--blue);font-weight:700;font-size:13px}
@@ -81,13 +81,13 @@ h1{font-size:27px;margin:4px 0 8px}
     gym: {
       title: "Gimnasio SPORTUV",
       article: "el gimnasio",
-      image: GYM_IMAGE,
+      image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=90",
       desc: "Reserva tu bloque para entrenar en el gimnasio universitario."
     },
     nut: {
       title: "Nutricionista",
       article: "un nutricionista",
-      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",
+      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1400&q=90",
       desc: "Agenda orientación nutricional para apoyar tus hábitos y rendimiento."
     },
     psi: {
@@ -102,7 +102,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101","102","201","202","301","302","401","402"];
 
-  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], historyLoading:false, gymAvailability:{} };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], historyLoading:false, gymAvailability:{}, professionalAvailability:{} };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -143,6 +143,69 @@ h1{font-size:27px;margin:4px 0 8px}
       throw new Error(message);
     }
     return data;
+  }
+
+  function showConfirmationToast(){
+    var old=document.getElementById("sportuvToast");
+    if(old) old.remove();
+    var toast=document.createElement("div");
+    toast.id="sportuvToast";
+    toast.textContent="Tu reserva ya ha sido confirmada";
+    toast.style.position="fixed";
+    toast.style.left="50%";
+    toast.style.bottom="24px";
+    toast.style.transform="translateX(-50%)";
+    toast.style.zIndex="9999";
+    toast.style.background="#123f5a";
+    toast.style.color="#fff";
+    toast.style.padding="13px 18px";
+    toast.style.borderRadius="14px";
+    toast.style.boxShadow="0 10px 28px #0004";
+    toast.style.fontWeight="800";
+    toast.style.width="calc(100% - 40px)";
+    toast.style.maxWidth="390px";
+    toast.style.textAlign="center";
+    document.body.appendChild(toast);
+    setTimeout(function(){ if(toast && toast.parentNode) toast.remove(); },4500);
+  }
+
+  function requestNotificationPermission(){
+    if(!("Notification" in window)) return Promise.resolve("unsupported");
+    if(Notification.permission==="granted") return Promise.resolve("granted");
+    if(Notification.permission==="denied") return Promise.resolve("denied");
+    try{
+      return Notification.requestPermission();
+    }catch(e){
+      return Promise.resolve("unsupported");
+    }
+  }
+
+  function sendReservationNotification(booking){
+    showConfirmationToast();
+    if(!("Notification" in window) || Notification.permission!=="granted") return;
+    try{
+      new Notification("SPORTUV",{
+        body:"Tu reserva ya ha sido confirmada",
+        tag:booking && booking.id ? booking.id : "sportuv-confirmada"
+      });
+    }catch(e){}
+  }
+
+  async function loadProfessionalAvailability(service,dayKey){
+    if(!dayKey || (service!=="nut" && service!=="psi")) return;
+    var key=service+"|"+dayKey;
+    try{
+      var rows=await rpc("sportuv_service_availability",{p_service:service,p_booking_date:dayKey});
+      var map={};
+      (rows||[]).forEach(function(r){
+        map[String(r.booking_time).slice(0,5)]={
+          count:Number(r.available_professionals||0),
+          names:r.professional_names||""
+        };
+      });
+      state.professionalAvailability[key]=map;
+      if(state.view==="booking" && state.service===service && state.day===dayKey) renderBooking();
+    }catch(e){}
   }
 
   async function loadGymAvailability(dayKey){
@@ -189,7 +252,7 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function header(){
-    return '<header><button class="icon" data-action="home">⌂</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="icon" data-action="history" title="Historial">↻</button><button class="icon" data-action="logout">↪</button></div></header>';
+    return '<header><button class="icon" data-action="home">⌂</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="icon" data-action="history" title="Historial">📋</button><button class="icon" data-action="logout">↪</button></div></header>';
   }
 
   function renderLogin(){
@@ -208,7 +271,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión cupos e historial v5</p>'+
+        '<p class="small version">SPORTUV · versión profesionales y notificaciones v6</p>'+
       '</section>';
   }
 
@@ -302,6 +365,10 @@ h1{font-size:27px;margin:4px 0 8px}
         var dayMap=state.gymAvailability[dayKey];
         if(dayMap && dayMap[t] && dayMap[t].remaining<=0) return false;
       }
+      if(service==="nut" || service==="psi"){
+        var proMap=state.professionalAvailability[service+"|"+dayKey];
+        if(proMap && (!proMap[t] || proMap[t].count<=0)) return false;
+      }
       return true;
     });
   }
@@ -333,6 +400,12 @@ h1{font-size:27px;margin:4px 0 8px}
           if(info) cap='<div class="cap">'+info.remaining+' cupos libres</div>';
           else cap='<div class="cap">Consultando cupos…</div>';
         }
+        if(state.service==="nut" || state.service==="psi"){
+          var pro=state.professionalAvailability[state.service+"|"+state.day];
+          var pinfo=pro && pro[t];
+          if(pinfo) cap='<div class="cap">'+esc(pinfo.names)+'</div>';
+          else cap='<div class="cap">Consultando profesionales…</div>';
+        }
         timeHtml += '<button type="button" class="slot '+(state.time===t?'selected':'')+'" data-time="'+t+'">'+t+cap+'</button>';
       });
     }
@@ -352,6 +425,9 @@ h1{font-size:27px;margin:4px 0 8px}
 
     if(state.service==="gym" && state.day && !state.gymAvailability[state.day]){
       loadGymAvailability(state.day);
+    }
+    if((state.service==="nut" || state.service==="psi") && state.day && !state.professionalAvailability[state.service+"|"+state.day]){
+      loadProfessionalAvailability(state.service,state.day);
     }
   }
 
@@ -412,7 +488,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión cupos e historial v5</p>'+
+        '<p class="small version">SPORTUV · versión profesionales y notificaciones v6</p>'+
       '</main>';
   }
 
@@ -468,6 +544,7 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time = null;
       }
       if(state.service==="gym") loadGymAvailability(state.day);
+      else if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
       else renderBooking();
     }
   },30000);
@@ -506,17 +583,13 @@ h1{font-size:27px;margin:4px 0 8px}
       createdAt: new Date().toISOString()
     };
 
-    if(b.service==="nut"){
-      b.professional = randomItem(NUTRITIONISTS);
-      b.location = randomItem(LOCATIONS);
-      b.assignedPlace = b.location;
-    }
-    if(b.service==="psi"){
-      b.professional = randomItem(PSYCHOLOGISTS);
-      b.location = randomItem(LOCATIONS);
-      b.assignedPlace = b.location;
+    if(b.service==="nut" || b.service==="psi"){
+      b.professional = null;
+      b.location = null;
+      b.assignedPlace = null;
     }
 
+    var notificationPermissionPromise=requestNotificationPermission();
     var confirmBtn = document.getElementById("confirmBooking");
     if(confirmBtn){ confirmBtn.disabled = true; confirmBtn.textContent = "Guardando reserva..."; }
 
@@ -539,6 +612,7 @@ h1{font-size:27px;margin:4px 0 8px}
       b.room = savedRow.room || null;
       b.assignedPlace = savedRow.assigned_place || b.assignedPlace || null;
       b.professional = savedRow.professional || b.professional || null;
+      b.location = savedRow.assigned_place || b.location || null;
       if(b.service==="gym" && b.room) b.location = "Sala "+b.room;
 
       var stored = [];
@@ -548,9 +622,12 @@ h1{font-size:27px;margin:4px 0 8px}
       save("sportuv_reservations", JSON.stringify(stored));
 
       state.gymAvailability={};
+      state.professionalAvailability={};
       state.booking = b;
       state.view = "done";
       render();
+      await notificationPermissionPromise;
+      sendReservationNotification(b);
     }catch(err){
       if(confirmBtn){ confirmBtn.disabled = false; confirmBtn.textContent = "Agendar"; }
       var msg=err.message||"";
@@ -562,6 +639,12 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time=null;
         renderBooking();
         alert("Ese horario del gimnasio ya completó todos sus cupos. Selecciona otro horario.");
+      }else if(msg.indexOf("PROFESSIONAL_SLOT_FULL")!==-1){
+        state.professionalAvailability={};
+        if(state.day) loadProfessionalAvailability(state.service,state.day);
+        state.time=null;
+        renderBooking();
+        alert("Ya no quedan profesionales disponibles en ese horario. Selecciona otra hora.");
       }else if(msg.indexOf("PAST_SLOT")!==-1){
         state.time=null;
         renderBooking();
@@ -601,6 +684,7 @@ h1{font-size:27px;margin:4px 0 8px}
       state.day = day.getAttribute("data-day");
       state.time = null;
       if(state.service==="gym") loadGymAvailability(state.day);
+      if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
       render();
       return;
     }
