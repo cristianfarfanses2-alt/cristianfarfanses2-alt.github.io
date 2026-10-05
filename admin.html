@@ -70,7 +70,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   <section class="tableCard">
     <div class="tableTop">
       <div><b>Tabla de reservas</b><div class="muted" id="tableCaption">Mostrando reservas</div></div>
-      <button class="btn danger" id="clearBtn">Borrar todos los registros</button>
     </div>
     <div class="tableScroll">
       <table>
@@ -275,22 +274,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     }
   }
 
-  async function clearAll(){
-    var p=pin();
-    if(!p){ setStatus("Ingresa el PIN de administrador.",true); return; }
-    if(!confirm("¿Borrar todos los registros de la base central?")) return;
-    try{
-      var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/sportuv_admin_clear_reservations",{
-        method:"POST",
-        headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
-        body:JSON.stringify({p_pin:p})
-      });
-      if(!res.ok) throw new Error(await res.text());
-      await fetchReservations();
-    }catch(e){
-      setStatus("No fue posible borrar los registros.",true);
-    }
-  }
 
   document.getElementById("dateFilter").value="";
   ["dateFilter","serviceFilter","searchFilter"].forEach(function(id){
@@ -302,7 +285,6 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     document.getElementById("dateFilter").value="";render();
   });
   document.getElementById("csvBtn").addEventListener("click",exportCSV);
-  document.getElementById("clearBtn").addEventListener("click",clearAll);
   document.getElementById("rows").addEventListener("click",function(e){
     var btn=e.target.closest(".rowDelete");
     if(btn) archiveOne(btn.getAttribute("data-code"));
