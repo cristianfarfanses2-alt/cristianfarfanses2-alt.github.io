@@ -103,6 +103,24 @@ h1{font-size:27px;margin:4px 0 8px}
       article: "un psicólogo/a",
       image: "assets/cerebro_psicologia.jpg",
       desc: "Agenda un espacio de acompañamiento psicológico universitario."
+    },
+    football: {
+      title: "Partido de fútbol",
+      article: "el partido de fútbol",
+      image: "https://images.unsplash.com/photo-1553778263-73a83bab9b0c?auto=format&fit=crop&w=1400&q=90",
+      desc: "Inscríbete al partido diario de las 17:00. Cupo máximo: 22 jugadores."
+    },
+    basketball: {
+      title: "Partido de básquetbol",
+      article: "el partido de básquetbol",
+      image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1400&q=90",
+      desc: "Inscríbete al partido diario de las 17:00. Cupo máximo: 10 jugadores."
+    },
+    volleyball: {
+      title: "Partido de voleibol",
+      article: "el partido de voleibol",
+      image: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1400&q=90",
+      desc: "Inscríbete al partido diario de las 17:00. Cupo máximo: 12 jugadores."
     }
   };
 
@@ -110,7 +128,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101"];
 
-  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{} };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{}, sportsAvailability:{} };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -213,6 +231,36 @@ h1{font-size:27px;margin:4px 0 8px}
       });
       state.professionalAvailability[key]=map;
       if(state.view==="booking" && state.service===service && state.day===dayKey) renderBooking();
+    }catch(e){}
+  }
+
+  function isSport(service){
+    return service==="football" || service==="basketball" || service==="volleyball";
+  }
+
+  function sportCapacity(service){
+    return service==="football" ? 22 : service==="basketball" ? 10 : service==="volleyball" ? 12 : 0;
+  }
+
+  async function loadSportsAvailability(dayKey){
+    if(!dayKey) return;
+    try{
+      var rows=await rpc("sportuv_sports_availability",{p_booking_date:dayKey});
+      var map={};
+      (rows||[]).forEach(function(r){
+        map[r.service]={
+          capacity:Number(r.capacity||0),
+          booked:Number(r.booked||0),
+          remaining:Number(r.remaining||0),
+          full:!!r.is_full
+        };
+      });
+      state.sportsAvailability[dayKey]=map;
+      if(state.view==="booking" && isSport(state.service) && state.day===dayKey){
+        var info=map[state.service];
+        if(info && info.full) state.time=null;
+        renderBooking();
+      }
     }catch(e){}
   }
 
@@ -336,7 +384,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión sala 101 aforo 10 v10</p>'+
+        '<p class="small version">SPORTUV · versión deportes 17h v11</p>'+
       '</section>';
   }
 
@@ -388,7 +436,9 @@ h1{font-size:27px;margin:4px 0 8px}
   function getTimes(service){
     if(service==="gym") return ["09:00","10:00","11:00","12:00","15:00","16:00","17:00","18:00"];
     if(service==="nut") return ["09:30","10:30","11:30","14:30","15:30","16:30"];
-    return ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"];
+    if(service==="psi") return ["09:00","10:00","11:00","12:00","15:00","16:00","17:00"];
+    if(isSport(service)) return ["17:00"];
+    return [];
   }
 
   function chileNow(){
@@ -474,6 +524,20 @@ h1{font-size:27px;margin:4px 0 8px}
           if(pinfo) cap='<div class="cap">'+esc(pinfo.names)+'</div>';
           else cap='<div class="cap">Consultando profesionales…</div>';
         }
+        if(isSport(state.service)){
+          var sportDay=state.sportsAvailability[state.day];
+          var sinfo=sportDay && sportDay[state.service];
+          if(sinfo){
+            if(sinfo.full){
+              cap='<div class="cap">Lleno · '+sinfo.booked+'/'+sinfo.capacity+' jugadores</div>';
+              timeHtml += '<button type="button" class="slot slotFull" disabled>'+t+cap+'</button>';
+              return;
+            }
+            cap='<div class="cap">'+sinfo.booked+'/'+sinfo.capacity+' inscritos · '+sinfo.remaining+' cupos libres</div>';
+          }else{
+            cap='<div class="cap">Consultando cupos…</div>';
+          }
+        }
         timeHtml += '<button type="button" class="slot '+(state.time===t?'selected':'')+'" data-time="'+t+'">'+t+cap+'</button>';
       });
     }
@@ -497,6 +561,7 @@ h1{font-size:27px;margin:4px 0 8px}
           html+='</div></div>';
           return html;
         })() : '')+
+        (isSport(state.service) ? '<div class="info"><b>🏟️ Partido diario</b><p>Único horario disponible: <strong>17:00 hrs</strong>.</p><p class="small">El partido se cierra cuando se completa el número máximo de jugadores.</p></div>' : '')+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
@@ -506,6 +571,9 @@ h1{font-size:27px;margin:4px 0 8px}
     }
     if((state.service==="nut" || state.service==="psi") && state.day && !state.professionalAvailability[state.service+"|"+state.day]){
       loadProfessionalAvailability(state.service,state.day);
+    }
+    if(isSport(state.service) && state.day && !state.sportsAvailability[state.day]){
+      loadSportsAvailability(state.day);
     }
   }
 
@@ -553,6 +621,16 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>';
     }
 
+    if(isSport(b.service)){
+      extra =
+        '<div class="info">'+
+          '<b>'+serviceIcon(b.service)+' Inscripción al partido confirmada</b>'+
+          '<p>Tu cupo quedó reservado para las <strong>17:00 hrs</strong>.</p>'+
+          '<p>Lugar: <strong>'+esc(b.location||b.assignedPlace||"Cancha deportiva")+'</strong>.</p>'+
+          '<p class="small">Capacidad máxima: '+sportCapacity(b.service)+' jugadores.</p>'+
+        '</div>';
+    }
+
     app.innerHTML = header()+
       '<main class="done">'+
         '<div class="tick">✓</div>'+
@@ -566,12 +644,18 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión reservas visual v8</p>'+
+        '<p class="small version">SPORTUV · versión deportes 17h v11</p>'+
       '</main>';
   }
 
   function serviceIcon(code){
-    return code==="gym" ? "🏋️" : code==="nut" ? "🥗" : "🧠";
+    if(code==="gym") return "🏋️";
+    if(code==="nut") return "🥗";
+    if(code==="psi") return "🧠";
+    if(code==="football") return "⚽";
+    if(code==="basketball") return "🏀";
+    if(code==="volleyball") return "🏐";
+    return "📅";
   }
 
   async function loadGymRoomOccupancy(dayKey,time){
@@ -585,7 +669,13 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function serviceLabel(code){
-    return code==="gym" ? "Gimnasio SPORTUV" : code==="nut" ? "Nutricionista" : "Psicólogo/a";
+    if(code==="gym") return "Gimnasio SPORTUV";
+    if(code==="nut") return "Nutricionista";
+    if(code==="psi") return "Psicólogo/a";
+    if(code==="football") return "Partido de fútbol";
+    if(code==="basketball") return "Partido de básquetbol";
+    if(code==="volleyball") return "Partido de voleibol";
+    return "Reserva";
   }
 
   function renderHistory(){
@@ -675,6 +765,7 @@ h1{font-size:27px;margin:4px 0 8px}
       }
       if(state.service==="gym") loadGymAvailability(state.day);
       else if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
+      else if(isSport(state.service)) loadSportsAvailability(state.day);
       else renderBooking();
     }
   },30000);
@@ -753,6 +844,7 @@ h1{font-size:27px;margin:4px 0 8px}
 
       state.gymAvailability={};
       state.professionalAvailability={};
+      state.sportsAvailability={};
       state.booking = b;
       state.view = "done";
       render();
@@ -773,6 +865,16 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time=null;
         renderBooking();
         alert("Ese horario del gimnasio ya completó todos sus cupos. Selecciona otro horario.");
+      }else if(msg.indexOf("SPORT_SLOT_FULL")!==-1){
+        state.sportsAvailability={};
+        if(state.day) loadSportsAvailability(state.day);
+        state.time=null;
+        renderBooking();
+        alert("El partido ya completó todos sus cupos. Selecciona otro día.");
+      }else if(msg.indexOf("SPORT_INVALID_TIME")!==-1){
+        state.time=null;
+        renderBooking();
+        alert("Los partidos solo pueden reservarse a las 17:00 hrs.");
       }else if(msg.indexOf("PROFESSIONAL_SLOT_FULL")!==-1){
         state.professionalAvailability={};
         if(state.day) loadProfessionalAvailability(state.service,state.day);
@@ -838,6 +940,7 @@ h1{font-size:27px;margin:4px 0 8px}
       state.time = null;
       if(state.service==="gym") loadGymAvailability(state.day);
       if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
+      if(isSport(state.service)) loadSportsAvailability(state.day);
       render();
       return;
     }
