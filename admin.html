@@ -36,7 +36,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 
 <div class="wrap">
   <h1>Reservas por día</h1>
-  <p class="sub">Visualiza las reservas registradas desde SPORTUV en la base de datos central.</p><div id="adminStatus" class="notice" style="display:none;margin:0 0 16px"></div>
+  <p class="sub">Visualiza las reservas registradas desde SPORTUV en la base de datos central.</p><div id="liveSync" class="notice" style="margin:0 0 10px;background:#eaf6ef;border-color:#bfe0cb;color:#276747"><b>● Sincronización automática</b> · actualiza nuevas reservas cada 3 segundos.</div><div id="adminStatus" class="notice" style="display:none;margin:0 0 16px"></div>
 
   <section class="stats">
     <div class="stat"><b id="totalCount">0</b><span>Reservas mostradas</span></div>
@@ -93,7 +93,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   </section>
 
   <div class="notice">
-    <b>Base central activa:</b> este panel consulta Supabase, por lo que puede mostrar reservas realizadas desde distintos teléfonos y computadores.
+    <b>Base central activa:</b> este panel consulta Supabase automáticamente cada 3 segundos y muestra reservas realizadas desde distintos teléfonos y computadores.
   </div>
 </div>
 <footer>SPORTUV · Panel administrativo de demostración</footer>
@@ -105,6 +105,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   var SUPABASE_KEY="sb_publishable_PvNoi_wpr8ZiM4aPzJv_Wg_qQni3t9P";
   var current=[];
   var allReservations=[];
+  var syncTimer=null;
+  var loading=false;
 
   function esc(v){
     return String(v==null?"":v).replace(/[&<>"']/g,function(c){
@@ -149,16 +151,18 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     el.textContent=msg;
   }
 
-  async function fetchReservations(){
+  async function fetchReservations(silent){
+    if(loading) return;
     var p=pin();
     if(!p){
       allReservations=[];
       render();
-      setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
+      if(!silent) setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
       return;
     }
     sessionStorage.setItem("sportuv_admin_pin",p);
-    setStatus("Cargando reservas...",false);
+    if(!silent) setStatus("Cargando reservas...",false);
+    loading=true;
     try{
       var res=await fetch(SUPABASE_URL+"/rest/v1/rpc/sportuv_admin_reservations",{
         method:"POST",
@@ -170,13 +174,22 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
       });
       if(!res.ok) throw new Error(await res.text());
       allReservations=await res.json();
-      setStatus("Reservas sincronizadas correctamente.",false);
+      if(!silent) setStatus("Reservas sincronizadas correctamente. Actualización automática activa.",false);
       render();
     }catch(e){
-      allReservations=[];
-      render();
-      setStatus("No se pudieron cargar las reservas. Revisa el PIN e intenta nuevamente.",true);
+      if(!silent){
+        allReservations=[];
+        render();
+        setStatus("No se pudieron cargar las reservas. Revisa el PIN e intenta nuevamente.",true);
+      }
+    }finally{
+      loading=false;
     }
+  }
+
+  function startAutoSync(){
+    if(syncTimer) clearInterval(syncTimer);
+    syncTimer=setInterval(function(){ fetchReservations(true); },3000);
   }
 
   function filtered(){
@@ -279,12 +292,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     }
   }
 
-  document.getElementById("dateFilter").value=today();
+  document.getElementById("dateFilter").value="";
   ["dateFilter","serviceFilter","searchFilter"].forEach(function(id){
     document.getElementById(id).addEventListener("input",render);
   });
-  document.getElementById("loginAdminBtn").addEventListener("click",fetchReservations);
-  document.getElementById("refreshBtn").addEventListener("click",fetchReservations);
+  document.getElementById("loginAdminBtn").addEventListener("click",function(){ fetchReservations(false); startAutoSync(); });
+  document.getElementById("refreshBtn").addEventListener("click",function(){ fetchReservations(false); });
   document.getElementById("allDatesBtn").addEventListener("click",function(){
     document.getElementById("dateFilter").value="";render();
   });
@@ -294,12 +307,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     var btn=e.target.closest(".rowDelete");
     if(btn) archiveOne(btn.getAttribute("data-code"));
   });
-  document.getElementById("adminPin").addEventListener("keydown",function(e){if(e.key==="Enter")fetchReservations();});
+  document.getElementById("adminPin").addEventListener("keydown",function(e){if(e.key==="Enter"){fetchReservations(false);startAutoSync();}});
 
   var savedPin=sessionStorage.getItem("sportuv_admin_pin")||"";
   if(savedPin){
     document.getElementById("adminPin").value=savedPin;
-    fetchReservations();
+    fetchReservations(false);
+    startAutoSync();
   }else{
     render();
     setStatus("Ingresa el PIN de administrador para cargar las reservas.",true);
