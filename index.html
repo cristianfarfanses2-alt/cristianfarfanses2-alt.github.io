@@ -110,6 +110,7 @@ h1{font-size:27px;margin:4px 0 8px}
       title: "Nutricionista",
       article: "un nutricionista",
       image: "assets/nutricionista_uv_referencial.png",
+      imagePosition: "center 38%",
       reference: "Imagen referencial",
       desc: "Agenda orientación nutricional para apoyar tus hábitos y rendimiento."
     },
@@ -399,7 +400,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión nutricionista referencial v12.4</p>'+
+        '<p class="small version">SPORTUV · versión nutricionista tarjeta v12.5</p>'+
       '</section>';
   }
 
@@ -409,7 +410,7 @@ h1{font-size:27px;margin:4px 0 8px}
       var s = SERVICES[key];
       cards +=
         '<div class="card" data-service="'+key+'">'+
-          '<img src="'+s.image+'" alt="'+esc(s.title)+'">'+
+          '<img src="'+s.image+'" alt="'+esc(s.title)+'" style="object-position:'+(s.imagePosition||'center')+'">'+
           '<div class="shade"></div>'+
           '<div class="cardText">'+
             (s.reference?'<span class="referenceTag">'+esc(s.reference)+'</span>':'')+
@@ -599,7 +600,7 @@ h1{font-size:27px;margin:4px 0 8px}
     app.innerHTML = header()+
       '<main>'+
         '<div class="hero">'+
-          '<img src="'+s.image+'" alt="'+esc(s.title)+'">'+
+          '<img src="'+s.image+'" alt="'+esc(s.title)+'" style="object-position:'+(s.imagePosition||'center')+'">'+
           '<div class="shade"></div>'+
           (s.reference?'<span class="referenceTag" style="position:absolute;left:20px;top:18px;z-index:3">'+esc(s.reference)+'</span>':'')+
           '<h1>Agenda tu hora con '+esc(s.article)+'</h1>'+
@@ -699,7 +700,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión nutricionista referencial v12.4</p>'+
+        '<p class="small version">SPORTUV · versión nutricionista tarjeta v12.5</p>'+
       '</main>';
   }
 
