@@ -435,7 +435,7 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function header(){
-    return '<header><button class="logoutTextBtn" data-action="home" title="Inicio">Inicio</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="icon" data-action="history" title="Historial">📋</button><button class="logoutTextBtn" data-action="logout" title="Cerrar sesión">Cerrar sesión</button></div></header>';
+    return '<header><button class="logoutTextBtn" data-action="home" title="Inicio">Inicio</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="logoutTextBtn" data-action="history" title="Historial" aria-label="Historial">Historial</button><button class="logoutTextBtn" data-action="logout" title="Cerrar sesión">Cerrar sesión</button></div></header>';
   }
 
   function renderLogin(){
@@ -454,7 +454,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión interfaz v14.0</p>'+
+        '<p class="small version">SPORTUV · versión interfaz v14.1</p>'+
       '</section>';
   }
 
@@ -756,7 +756,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión interfaz v14.0</p>'+
+        '<p class="small version">SPORTUV · versión interfaz v14.1</p>'+
       '</main>';
   }
 
