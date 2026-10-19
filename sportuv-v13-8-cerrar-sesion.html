@@ -135,7 +135,7 @@ h1{font-size:27px;margin:4px 0 8px}
       image: "https://raw.githubusercontent.com/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io/main/assets/ab3f3783-8b3e-4be9-a14a-2db9097564e5.png?v=futbol-v13-5",
       imagePosition: "center 45%",
       reference: "Imagen referencial",
-      desc: "Inscríbete al partido diario de las 18:00. Cupo máximo: 12 jugadores."
+      desc: "Inscríbete al partido de los sábados a las 18:00. Cupo máximo: 12 jugadores."
     },
     basketball: {
       title: "Partido de básquetbol",
@@ -143,7 +143,7 @@ h1{font-size:27px;margin:4px 0 8px}
       image: "https://raw.githubusercontent.com/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io/main/assets/b4d037cd-3a51-4c9a-9fe7-2a986fa72dfd.png?v=basquet-v13-5",
       imagePosition: "center 45%",
       reference: "Imagen referencial",
-      desc: "Inscríbete al partido diario de las 15:00. Cupo máximo: 10 jugadores."
+      desc: "Inscríbete al partido de los sábados a las 15:00. Cupo máximo: 10 jugadores."
     },
     volleyball: {
       title: "Partido de voleibol",
@@ -151,7 +151,7 @@ h1{font-size:27px;margin:4px 0 8px}
       image: "https://cdn.jsdelivr.net/gh/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io@main/assets/e9c395ee-32a7-4df2-845d-ccd51f6543ec.png?v=voley-v13-5",
       imagePosition: "center 45%",
       reference: "Imagen referencial",
-      desc: "Inscríbete al partido diario de las 13:00. Cupo máximo: 12 jugadores."
+      desc: "Inscríbete al partido de los sábados a las 13:00. Cupo máximo: 12 jugadores."
     }
   };
 
@@ -454,7 +454,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión interfaz v14.0</p>'+
+        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
       '</section>';
   }
 
@@ -522,14 +522,23 @@ h1{font-size:27px;margin:4px 0 8px}
       '</main>';
   }
 
-  function getDays(){
+  function getDays(service){
     var nowParts = chileNow();
     var base = nowParts.dayKey.split("-");
     var anchor = new Date(Number(base[0]),Number(base[1])-1,Number(base[2]),12,0,0,0);
     var out = [];
-    for(var i=0;i<3;i++){
+    var offsets = [];
+
+    if(isSport(service)){
+      var daysUntilSaturday = (6-anchor.getDay()+7)%7;
+      for(var i=0;i<3;i++) offsets.push(daysUntilSaturday+(i*7));
+    }else{
+      offsets = [0,1,2];
+    }
+
+    offsets.forEach(function(offset){
       var d = new Date(anchor.getTime());
-      d.setDate(anchor.getDate()+i);
+      d.setDate(anchor.getDate()+offset);
       var y = d.getFullYear();
       var m = String(d.getMonth()+1).padStart(2,"0");
       var day = String(d.getDate()).padStart(2,"0");
@@ -538,7 +547,8 @@ h1{font-size:27px;margin:4px 0 8px}
         number: d.getDate(),
         weekday: d.toLocaleDateString("es-CL",{weekday:"short",timeZone:"America/Santiago"})
       });
-    }
+    });
+
     return out;
   }
 
@@ -597,7 +607,7 @@ h1{font-size:27px;margin:4px 0 8px}
 
   function renderBooking(){
     var s = SERVICES[state.service];
-    var days = getDays();
+    var days = getDays(state.service);
     var times = state.day ? availableTimesForDay(state.service,state.day) : [];
     var dayHtml = "";
     var timeHtml = "";
@@ -661,7 +671,7 @@ h1{font-size:27px;margin:4px 0 8px}
           (s.reference?'<span class="referenceTag" style="position:absolute;left:20px;top:18px;z-index:3">'+esc(s.reference)+'</span>':'')+
           '<h1>Agenda tu hora con '+esc(s.article)+'</h1>'+
         '</div>'+
-        '<div class="panel"><b>1. Selecciona el día</b><div class="grid">'+dayHtml+'</div></div>'+
+        '<div class="panel"><b>1. '+(isSport(state.service)?"Selecciona un sábado":"Selecciona el día")+'</b><div class="grid">'+dayHtml+'</div></div>'+
         '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
         (state.service==="gym" && state.day && state.time ? (function(){
           var rows=state.gymRoomOccupancy[state.day+"|"+state.time];
@@ -673,7 +683,7 @@ h1{font-size:27px;margin:4px 0 8px}
           html+='</div></div>';
           return html;
         })() : '')+
-        (isSport(state.service) ? '<div class="sportLocationCard"><b>📍 Ubicación del partido</b><p style="margin:7px 0 0"><strong>'+esc(SPORT_LOCATION)+'</strong></p><p class="small" style="margin:5px 0 0">Único horario disponible: <strong>'+esc(sportTime(state.service))+' hrs</strong> · Capacidad máxima: <strong>'+sportCapacity(state.service)+' jugadores</strong>.</p><img src="'+SPORT_LOCATION_IMAGE+'" alt="Ubicación referencial en Parque 627, Valparaíso"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
+        (isSport(state.service) ? '<div class="sportLocationCard"><b>📍 Ubicación del partido</b><p style="margin:7px 0 0"><strong>'+esc(SPORT_LOCATION)+'</strong></p><p class="small" style="margin:5px 0 0">Solo sábados · Horario: <strong>'+esc(sportTime(state.service))+' hrs</strong> · Capacidad máxima: <strong>'+sportCapacity(state.service)+' jugadores</strong>.</p><img src="'+SPORT_LOCATION_IMAGE+'" alt="Ubicación referencial en Parque 627, Valparaíso"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
@@ -756,7 +766,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión interfaz v14.0</p>'+
+        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
       '</main>';
   }
 
@@ -984,6 +994,11 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time=null;
         renderBooking();
         alert("El partido ya completó todos sus cupos. Selecciona otro día.");
+      }else if(msg.indexOf("SPORT_INVALID_DAY")!==-1){
+        state.day=null;
+        state.time=null;
+        renderBooking();
+        alert("Los partidos solo se pueden agendar los días sábado.");
       }else if(msg.indexOf("SPORT_INVALID_TIME")!==-1){
         state.time=null;
         renderBooking();
