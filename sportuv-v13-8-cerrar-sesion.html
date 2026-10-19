@@ -180,26 +180,58 @@ h1{font-size:27px;margin:4px 0 8px}
     try{ return localStorage.getItem(key) || ""; }catch(e){ return ""; }
   }
 
+  function wait(ms){
+    return new Promise(function(resolve){ setTimeout(resolve,ms); });
+  }
+
   async function rpc(name,payload){
-    var res = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
-      method:"POST",
-      headers:{
-        "apikey":SUPABASE_KEY,
-        "Content-Type":"application/json"
-      },
-      body:JSON.stringify(payload||{})
-    });
-    var textBody = await res.text();
-    var data = null;
-    try{ data = textBody ? JSON.parse(textBody) : null; }catch(e){ data = textBody; }
-    if(!res.ok){
-      var message = "";
-      if(data && data.message) message = data.message;
-      else if(typeof data==="string") message = data;
-      else message = "Error " + res.status;
-      throw new Error(message);
+    var lastError = null;
+    for(var attempt=0; attempt<4; attempt++){
+      try{
+        var res = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+          method:"POST",
+          cache:"no-store",
+          headers:{
+            "apikey":SUPABASE_KEY,
+            "Accept":"application/json",
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify(payload||{})
+        });
+        var textBody = await res.text();
+        var data = null;
+        try{ data = textBody ? JSON.parse(textBody) : null; }catch(e){ data = textBody; }
+
+        if(res.ok) return data;
+
+        var code = data && data.code ? String(data.code) : "";
+        var message = "";
+        if(data && data.message) message = data.message;
+        else if(typeof data==="string") message = data;
+        else message = "Error " + res.status;
+
+        lastError = new Error((code ? code+" · " : "") + message);
+
+        var backendStarting = (res.status===404 && code==="PGRST202") || res.status===502 || res.status===503 || res.status===504;
+        if(backendStarting && attempt<3){
+          await wait(1200*(attempt+1));
+          continue;
+        }
+        if(backendStarting){
+          throw new Error("BACKEND_STARTING · "+message);
+        }
+        throw lastError;
+      }catch(e){
+        lastError=e;
+        if(String(e && e.message || "").indexOf("BACKEND_STARTING")===0) throw e;
+        if(attempt<3){
+          await wait(1200*(attempt+1));
+          continue;
+        }
+        throw lastError;
+      }
     }
-    return data;
+    throw lastError || new Error("No fue posible conectar con SPORTUV.");
   }
 
   function showConfirmationToast(){
@@ -422,7 +454,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión interfaz v13.8</p>'+
+        '<p class="small version">SPORTUV · versión reservas v13.9</p>'+
       '</section>';
   }
 
@@ -724,7 +756,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión interfaz v13.8</p>'+
+        '<p class="small version">SPORTUV · versión reservas v13.9</p>'+
       '</main>';
   }
 
@@ -966,6 +998,8 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time=null;
         renderBooking();
         alert("Ese horario ya pasó. Selecciona otro horario.");
+      }else if(msg.indexOf("BACKEND_STARTING")!==-1 || msg.indexOf("PGRST202")!==-1){
+        alert("El sistema de reservas se está iniciando. Ya reintentamos la conexión automáticamente. Espera unos segundos y vuelve a presionar Agendar.");
       }else{
         alert("No se pudo guardar la reserva en el sistema central. Intenta nuevamente.\n\n"+msg);
       }
