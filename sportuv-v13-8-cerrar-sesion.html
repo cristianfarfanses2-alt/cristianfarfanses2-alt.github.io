@@ -41,6 +41,18 @@ h1{font-size:27px;margin:4px 0 8px}
 .sportLocationCard{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:0 8px 24px #18364612}
 .sportLocationCard img{width:100%;height:150px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block;margin-top:10px}
 .sportLocationCard .mapCredit{font-size:11px;color:var(--muted);margin-top:7px}
+.prototypeNotice{background:#fff8dd;border:1px solid #ead69b;border-radius:15px;padding:12px 14px;margin:12px 0 16px;color:#634d05;font-size:13px;line-height:1.45}
+.prototypeNotice b{display:block;margin-bottom:3px}
+.gymInfoCard{background:#fff;border-radius:18px;padding:14px;margin:14px 0 18px;box-shadow:0 8px 24px #18364612}
+.gymInfoCard p{margin:7px 0 0;color:#40515c;line-height:1.45}
+.gymInfoCard img{width:100%;height:150px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block;margin-top:10px}
+.gymInfoCard .mapCredit{font-size:11px;color:var(--muted);margin-top:7px}
+.playerListCard{background:#fff;border-radius:18px;padding:15px;margin:14px 0;box-shadow:0 8px 24px #18364612}
+.playerListCard h3{margin:0 0 5px;font-size:18px}
+.playerList{display:grid;gap:8px;margin-top:11px}
+.playerRow{display:flex;align-items:center;gap:10px;padding:9px 10px;background:#f4f7f9;border-radius:12px}
+.playerAvatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e5eef3;color:var(--blue);font-weight:900;font-size:12px;flex:0 0 30px}
+.playerEmpty{padding:11px;background:#f4f7f9;border-radius:12px;color:var(--muted);font-size:13px}
 .aboutFooter{margin-top:28px;padding:26px 22px 30px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;text-align:center;cursor:pointer}
 .aboutFooter h2{margin:0 0 8px;font-size:23px}
 .aboutFooter p{margin:0 auto;max-width:360px;color:#eaf2f6;line-height:1.5}
@@ -159,7 +171,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101"];
 
-  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{}, sportsAvailability:{} };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{}, sportsAvailability:{}, sportPlayers:{} };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -311,6 +323,7 @@ h1{font-size:27px;margin:4px 0 8px}
 
   var SPORT_LOCATION = "Parque 627, Valparaíso";
   var SPORT_LOCATION_IMAGE = "https://cdn.jsdelivr.net/gh/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io@main/assets/Captura%20de%20pantalla%202026-10-08%20233651.png?v=mapa-v13-7";
+  var GYM_LOCATION_IMAGE = "data:image/jpeg;base64,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";
 
   async function loadSportsAvailability(dayKey){
     if(!dayKey) return;
@@ -332,6 +345,41 @@ h1{font-size:27px;margin:4px 0 8px}
         renderBooking();
       }
     }catch(e){}
+  }
+
+  async function loadSportPlayers(service,dayKey){
+    if(!dayKey || !isSport(service)) return;
+    var key=service+"|"+dayKey;
+    try{
+      var rows=await rpc("sportuv_sport_players",{p_service:service,p_booking_date:dayKey});
+      state.sportPlayers[key]=(rows||[]).map(function(r){
+        return {
+          name:r.player_name||"Jugador/a",
+          time:String(r.booking_time||"").slice(0,5)
+        };
+      });
+      if(state.view==="booking" && state.service===service && state.day===dayKey) renderBooking();
+    }catch(e){}
+  }
+
+  function sportPlayersPanel(){
+    if(!isSport(state.service) || !state.day) return "";
+    var key=state.service+"|"+state.day;
+    var players=state.sportPlayers[key];
+    if(!players){
+      return '<div class="playerListCard"><h3>👥 Jugadores inscritos</h3><div class="playerEmpty">Consultando jugadores inscritos…</div></div>';
+    }
+    var html='<div class="playerListCard"><h3>👥 Jugadores inscritos</h3><p class="small" style="margin:0;color:var(--muted)">Lista del partido seleccionado. En esta app de prueba los nombres ingresados deben ser ficticios.</p><div class="playerList">';
+    if(!players.length){
+      html+='<div class="playerEmpty">Aún no hay jugadores inscritos en este partido.</div>';
+    }else{
+      players.forEach(function(p,i){
+        var initial=String(p.name||"J").trim().charAt(0).toUpperCase()||"J";
+        html+='<div class="playerRow"><span class="playerAvatar">'+esc(initial)+'</span><div><b>'+(i+1)+'. '+esc(p.name)+'</b>'+(p.time?'<div class="small">'+esc(p.time)+' hrs</div>':'')+'</div></div>';
+      });
+    }
+    html+='</div></div>';
+    return html;
   }
 
   async function loadGymAvailability(dayKey){
@@ -435,7 +483,7 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   function header(){
-    return '<header><button class="logoutTextBtn" data-action="home" title="Inicio">Inicio</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="icon" data-action="history" title="Historial">📋</button><button class="logoutTextBtn" data-action="logout" title="Cerrar sesión">Cerrar sesión</button></div></header>';
+    return '<header><button class="logoutTextBtn" data-action="home" title="Inicio">Inicio</button><b>SPORTUV</b><div style="display:flex;gap:8px"><button class="logoutTextBtn" data-action="history" title="Historial" aria-label="Historial">Historial</button><button class="logoutTextBtn" data-action="logout" title="Cerrar sesión">Cerrar sesión</button></div></header>';
   }
 
   function renderLogin(){
@@ -454,7 +502,8 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
+        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
+        '<p class="small" style="text-align:center;margin:10px 4px 0;color:var(--muted);font-size:11px;line-height:1.4"><b>Aplicación de prueba:</b> utiliza únicamente datos ficticios. No ingreses información personal real.</p>'+
       '</section>';
   }
 
@@ -671,6 +720,7 @@ h1{font-size:27px;margin:4px 0 8px}
           (s.reference?'<span class="referenceTag" style="position:absolute;left:20px;top:18px;z-index:3">'+esc(s.reference)+'</span>':'')+
           '<h1>Agenda tu hora con '+esc(s.article)+'</h1>'+
         '</div>'+
+        (state.service==="gym" ? '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Tu reserva corresponde a <strong>1 hora de entrenamiento</strong> en el <strong>Edificio Hucke · Sala 101</strong>.</p><p class="small" style="margin-top:6px"><strong>Importante:</strong> al finalizar tu bloque de 1 hora debes liberar la sala para el siguiente turno.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         '<div class="panel"><b>1. '+(isSport(state.service)?"Selecciona un sábado":"Selecciona el día")+'</b><div class="grid">'+dayHtml+'</div></div>'+
         '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
         (state.service==="gym" && state.day && state.time ? (function(){
@@ -684,6 +734,7 @@ h1{font-size:27px;margin:4px 0 8px}
           return html;
         })() : '')+
         (isSport(state.service) ? '<div class="sportLocationCard"><b>📍 Ubicación del partido</b><p style="margin:7px 0 0"><strong>'+esc(SPORT_LOCATION)+'</strong></p><p class="small" style="margin:5px 0 0">Solo sábados · Horario: <strong>'+esc(sportTime(state.service))+' hrs</strong> · Capacidad máxima: <strong>'+sportCapacity(state.service)+' jugadores</strong>.</p><img src="'+SPORT_LOCATION_IMAGE+'" alt="Ubicación referencial en Parque 627, Valparaíso"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
+        sportPlayersPanel()+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
@@ -696,6 +747,9 @@ h1{font-size:27px;margin:4px 0 8px}
     }
     if(isSport(state.service) && state.day && !state.sportsAvailability[state.day]){
       loadSportsAvailability(state.day);
+    }
+    if(isSport(state.service) && state.day && !state.sportPlayers[state.service+"|"+state.day]){
+      loadSportPlayers(state.service,state.day);
     }
   }
 
@@ -766,7 +820,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
+        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
       '</main>';
   }
 
@@ -888,7 +942,10 @@ h1{font-size:27px;margin:4px 0 8px}
       }
       if(state.service==="gym") loadGymAvailability(state.day);
       else if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
-      else if(isSport(state.service)) loadSportsAvailability(state.day);
+      else if(isSport(state.service)){
+        loadSportsAvailability(state.day);
+        loadSportPlayers(state.service,state.day);
+      }
       else renderBooking();
     }
   },30000);
@@ -1070,7 +1127,10 @@ h1{font-size:27px;margin:4px 0 8px}
       state.time = null;
       if(state.service==="gym") loadGymAvailability(state.day);
       if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
-      if(isSport(state.service)) loadSportsAvailability(state.day);
+      if(isSport(state.service)){
+        loadSportsAvailability(state.day);
+        loadSportPlayers(state.service,state.day);
+      }
       render();
       return;
     }
