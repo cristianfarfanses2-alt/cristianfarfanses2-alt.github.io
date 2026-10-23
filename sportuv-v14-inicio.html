@@ -505,7 +505,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión anticipación v14.8</p>'+
+        '<p class="small version">SPORTUV · versión interfaz v14.9</p>'+
         '<p class="small" style="text-align:center;margin:10px 4px 0;color:var(--muted);font-size:11px;line-height:1.4"><b>Aplicación de prueba:</b> utiliza únicamente datos ficticios. No ingreses información personal real.</p>'+
       '</section>';
   }
@@ -735,7 +735,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         (state.service==="gym" ? '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Tu reserva corresponde a <strong>1 hora de entrenamiento</strong> en el <strong>Edificio Hucke · Sala 101</strong>.</p><p class="small" style="margin-top:6px"><strong>Importante:</strong> al finalizar tu bloque de 1 hora debes liberar la sala para el siguiente turno.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         '<div class="panel"><b>1. '+(isSport(state.service)?"Selecciona un sábado":"Selecciona el día")+'</b><div class="grid">'+dayHtml+'</div></div>'+
-        '<div class="panel"><b>2. Selecciona la hora</b><p class="small" style="margin:7px 0 0;color:var(--muted)">Las reservas cierran 30 minutos antes de cada horario. Si faltan 30 minutos o menos, deberás elegir el siguiente horario disponible.</p><div class="grid">'+timeHtml+'</div></div>'+
+        '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
         (state.service==="gym" && state.day && state.time ? (function(){
           var rows=state.gymRoomOccupancy[state.day+"|"+state.time];
           if(!rows) return '<div class="panel"><b>Ocupación por sala</b><div class="small">Consultando ocupación…</div></div>';
@@ -836,7 +836,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '<div class="cancelHint" style="text-align:left;margin-top:16px"><b>¿Quieres cancelar esta hora?</b><br>Ve al apartado <strong>Historial</strong>, donde podrás revisar y cancelar tus reservas.</div>'+
         '<button class="miniBtn" data-action="history" style="width:100%;margin:0 0 10px">Ir a Historial</button>'+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión anticipación v14.8</p>'+
+        '<p class="small version">SPORTUV · versión interfaz v14.9</p>'+
       '</main>';
   }
 
