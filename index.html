@@ -53,6 +53,8 @@ h1{font-size:27px;margin:4px 0 8px}
 .playerRow{display:flex;align-items:center;gap:10px;padding:9px 10px;background:#f4f7f9;border-radius:12px}
 .playerAvatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e5eef3;color:var(--blue);font-weight:900;font-size:12px;flex:0 0 30px}
 .playerEmpty{padding:11px;background:#f4f7f9;border-radius:12px;color:var(--muted);font-size:13px}
+.cancelHint{background:#eef5f8;border:1px solid #d5e3ea;border-radius:13px;padding:11px 12px;margin:12px 0 10px;color:#40515c;font-size:12px;line-height:1.45}
+.cancelHint b{color:var(--blue)}
 .aboutFooter{margin-top:28px;padding:26px 22px 30px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;text-align:center;cursor:pointer}
 .aboutFooter h2{margin:0 0 8px;font-size:23px}
 .aboutFooter p{margin:0 auto;max-width:360px;color:#eaf2f6;line-height:1.5}
@@ -502,7 +504,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
+        '<p class="small version">SPORTUV · versión reservas v14.5</p>'+
         '<p class="small" style="text-align:center;margin:10px 4px 0;color:var(--muted);font-size:11px;line-height:1.4"><b>Aplicación de prueba:</b> utiliza únicamente datos ficticios. No ingreses información personal real.</p>'+
       '</section>';
   }
@@ -736,6 +738,7 @@ h1{font-size:27px;margin:4px 0 8px}
         (isSport(state.service) ? '<div class="sportLocationCard"><b>📍 Ubicación del partido</b><p style="margin:7px 0 0"><strong>'+esc(SPORT_LOCATION)+'</strong></p><p class="small" style="margin:5px 0 0">Solo sábados · Horario: <strong>'+esc(sportTime(state.service))+' hrs</strong> · Capacidad máxima: <strong>'+sportCapacity(state.service)+' jugadores</strong>.</p><img src="'+SPORT_LOCATION_IMAGE+'" alt="Ubicación referencial en Parque 627, Valparaíso"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         sportPlayersPanel()+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
+        '<div class="cancelHint"><b>¿Necesitas cancelar tu reserva?</b><br>Una vez agendada, puedes cancelarla desde el apartado <strong>Historial</strong>.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
 
@@ -820,7 +823,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
+        '<p class="small version">SPORTUV · versión reservas v14.5</p>'+
       '</main>';
   }
 
