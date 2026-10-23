@@ -454,7 +454,8 @@ h1{font-size:27px;margin:4px 0 8px}
       alert("Te uniste a la lista de espera"+(pos ? ". Posición: "+pos : "")+". Si se libera un cupo, el sistema asignará automáticamente el primero disponible.");
     }catch(e){
       var msg=e.message||"";
-      if(msg.indexOf("GYM_SLOT_AVAILABLE")!==-1) alert("Se liberó un cupo mientras intentabas entrar a la lista. Puedes reservar directamente.");
+      if(msg.indexOf("SLOT_TOO_SOON")!==-1) alert("La lista de espera también cierra 30 minutos antes. Debes elegir el siguiente horario disponible.");
+      else if(msg.indexOf("GYM_SLOT_AVAILABLE")!==-1) alert("Se liberó un cupo mientras intentabas entrar a la lista. Puedes reservar directamente.");
       else if(msg.indexOf("DUPLICATE_DAILY_BOOKING")!==-1) alert("Ya tienes una reserva de gimnasio para ese día.");
       else if(msg.indexOf("WAITLIST_DAILY_CONFLICT")!==-1) alert("Ya estás en una lista de espera del gimnasio para ese día.");
       else if(msg.indexOf("SAME_TIME_CONFLICT")!==-1) alert("Ya tienes otra reserva a esa misma hora.");
@@ -504,7 +505,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión imagen v14.7</p>'+
+        '<p class="small version">SPORTUV · versión anticipación v14.8</p>'+
         '<p class="small" style="text-align:center;margin:10px 4px 0;color:var(--muted);font-size:11px;line-height:1.4"><b>Aplicación de prueba:</b> utiliza únicamente datos ficticios. No ingreses información personal real.</p>'+
       '</section>';
   }
@@ -645,9 +646,19 @@ h1{font-size:27px;margin:4px 0 8px}
     return slotMinutes > now.minutes;
   }
 
+  function isBookingWindowOpen(dayKey,time){
+    var now = chileNow();
+    if(dayKey > now.dayKey) return true;
+    if(dayKey < now.dayKey) return false;
+
+    var hm=String(time).slice(0,5).split(":");
+    var slotMinutes=Number(hm[0])*60+Number(hm[1]);
+    return (slotMinutes-now.minutes) > 30;
+  }
+
   function availableTimesForDay(service,dayKey){
     return getTimes(service).filter(function(t){
-      if(!isSlotAvailable(dayKey,t)) return false;
+      if(!isBookingWindowOpen(dayKey,t)) return false;
       if(service==="nut" || service==="psi"){
         var proMap=state.professionalAvailability[service+"|"+dayKey];
         if(proMap && (!proMap[t] || proMap[t].count<=0)) return false;
@@ -663,7 +674,7 @@ h1{font-size:27px;margin:4px 0 8px}
     var dayHtml = "";
     var timeHtml = "";
 
-    if(state.day && state.time && !isSlotAvailable(state.day,state.time)){
+    if(state.day && state.time && !isBookingWindowOpen(state.day,state.time)){
       state.time = null;
     }
 
@@ -724,7 +735,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         (state.service==="gym" ? '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Tu reserva corresponde a <strong>1 hora de entrenamiento</strong> en el <strong>Edificio Hucke · Sala 101</strong>.</p><p class="small" style="margin-top:6px"><strong>Importante:</strong> al finalizar tu bloque de 1 hora debes liberar la sala para el siguiente turno.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         '<div class="panel"><b>1. '+(isSport(state.service)?"Selecciona un sábado":"Selecciona el día")+'</b><div class="grid">'+dayHtml+'</div></div>'+
-        '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
+        '<div class="panel"><b>2. Selecciona la hora</b><p class="small" style="margin:7px 0 0;color:var(--muted)">Las reservas cierran 30 minutos antes de cada horario. Si faltan 30 minutos o menos, deberás elegir el siguiente horario disponible.</p><div class="grid">'+timeHtml+'</div></div>'+
         (state.service==="gym" && state.day && state.time ? (function(){
           var rows=state.gymRoomOccupancy[state.day+"|"+state.time];
           if(!rows) return '<div class="panel"><b>Ocupación por sala</b><div class="small">Consultando ocupación…</div></div>';
@@ -825,7 +836,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '<div class="cancelHint" style="text-align:left;margin-top:16px"><b>¿Quieres cancelar esta hora?</b><br>Ve al apartado <strong>Historial</strong>, donde podrás revisar y cancelar tus reservas.</div>'+
         '<button class="miniBtn" data-action="history" style="width:100%;margin:0 0 10px">Ir a Historial</button>'+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión imagen v14.7</p>'+
+        '<p class="small version">SPORTUV · versión anticipación v14.8</p>'+
       '</main>';
   }
 
@@ -942,7 +953,7 @@ h1{font-size:27px;margin:4px 0 8px}
 
   setInterval(function(){
     if(state.view==="booking" && state.day){
-      if(state.time && !isSlotAvailable(state.day,state.time)){
+      if(state.time && !isBookingWindowOpen(state.day,state.time)){
         state.time = null;
       }
       if(state.service==="gym") loadGymAvailability(state.day);
@@ -972,10 +983,10 @@ h1{font-size:27px;margin:4px 0 8px}
   }
 
   async function confirmBooking(){
-    if(!state.day || !state.time || !isSlotAvailable(state.day,state.time)){
+    if(!state.day || !state.time || !isBookingWindowOpen(state.day,state.time)){
       state.time = null;
       render();
-      alert("Ese horario ya pasó o dejó de estar disponible. Selecciona otro horario.");
+      alert("Las reservas cierran 30 minutos antes. Ese horario ya no se puede agendar; selecciona el siguiente horario disponible.");
       return;
     }
 
@@ -1071,10 +1082,10 @@ h1{font-size:27px;margin:4px 0 8px}
         state.time=null;
         renderBooking();
         alert("Ya no quedan profesionales disponibles en ese horario. Selecciona otra hora.");
-      }else if(msg.indexOf("PAST_SLOT")!==-1){
+      }else if(msg.indexOf("SLOT_TOO_SOON")!==-1 || msg.indexOf("PAST_SLOT")!==-1){
         state.time=null;
         renderBooking();
-        alert("Ese horario ya pasó. Selecciona otro horario.");
+        alert("Las reservas cierran 30 minutos antes. Selecciona el siguiente horario disponible.");
       }else if(msg.indexOf("BACKEND_STARTING")!==-1 || msg.indexOf("PGRST202")!==-1){
         alert("El sistema de reservas se está iniciando. Ya reintentamos la conexión automáticamente. Espera unos segundos y vuelve a presionar Agendar.");
       }else{
