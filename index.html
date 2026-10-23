@@ -502,7 +502,8 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión validación v14.3</p>'+
+        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
+        '<p class="small" style="text-align:center;margin:10px 4px 0;color:var(--muted);font-size:11px;line-height:1.4"><b>Aplicación de prueba:</b> utiliza únicamente datos ficticios. No ingreses información personal real.</p>'+
       '</section>';
   }
 
@@ -528,8 +529,6 @@ h1{font-size:27px;margin:4px 0 8px}
       '<main>'+
         '<h1>Hola, '+esc(displayName)+' 👋</h1>'+
         '<p class="sub">¿Qué quieres agendar hoy?</p>'+
-        '<div class="prototypeNotice"><b>🧪 Aplicación de prueba</b>Para probar SPORTUV utiliza únicamente datos ficticios. No ingreses información personal real.</div>'+
-        '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Las horas de la sala de musculatura se realizan en el <strong>Edificio Hucke · Sala 101</strong>.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>'+
         cards+
       '</main>'+
       '<section class="aboutFooter" data-action="about">'+
@@ -721,6 +720,7 @@ h1{font-size:27px;margin:4px 0 8px}
           (s.reference?'<span class="referenceTag" style="position:absolute;left:20px;top:18px;z-index:3">'+esc(s.reference)+'</span>':'')+
           '<h1>Agenda tu hora con '+esc(s.article)+'</h1>'+
         '</div>'+
+        (state.service==="gym" ? '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Tu reserva corresponde a <strong>1 hora de entrenamiento</strong> en el <strong>Edificio Hucke · Sala 101</strong>.</p><p class="small" style="margin-top:6px"><strong>Importante:</strong> al finalizar tu bloque de 1 hora debes liberar la sala para el siguiente turno.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
         '<div class="panel"><b>1. '+(isSport(state.service)?"Selecciona un sábado":"Selecciona el día")+'</b><div class="grid">'+dayHtml+'</div></div>'+
         '<div class="panel"><b>2. Selecciona la hora</b><div class="grid">'+timeHtml+'</div></div>'+
         (state.service==="gym" && state.day && state.time ? (function(){
@@ -820,7 +820,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión validación v14.3</p>'+
+        '<p class="small version">SPORTUV · versión gimnasio v14.4</p>'+
       '</main>';
   }
 
