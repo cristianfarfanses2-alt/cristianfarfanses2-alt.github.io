@@ -41,6 +41,18 @@ h1{font-size:27px;margin:4px 0 8px}
 .sportLocationCard{background:#fff;border-radius:18px;padding:14px;margin:14px 0;box-shadow:0 8px 24px #18364612}
 .sportLocationCard img{width:100%;height:150px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block;margin-top:10px}
 .sportLocationCard .mapCredit{font-size:11px;color:var(--muted);margin-top:7px}
+.prototypeNotice{background:#fff8dd;border:1px solid #ead69b;border-radius:15px;padding:12px 14px;margin:12px 0 16px;color:#634d05;font-size:13px;line-height:1.45}
+.prototypeNotice b{display:block;margin-bottom:3px}
+.gymInfoCard{background:#fff;border-radius:18px;padding:14px;margin:14px 0 18px;box-shadow:0 8px 24px #18364612}
+.gymInfoCard p{margin:7px 0 0;color:#40515c;line-height:1.45}
+.gymInfoCard img{width:100%;height:150px;object-fit:cover;border-radius:14px;border:1px solid var(--line);display:block;margin-top:10px}
+.gymInfoCard .mapCredit{font-size:11px;color:var(--muted);margin-top:7px}
+.playerListCard{background:#fff;border-radius:18px;padding:15px;margin:14px 0;box-shadow:0 8px 24px #18364612}
+.playerListCard h3{margin:0 0 5px;font-size:18px}
+.playerList{display:grid;gap:8px;margin-top:11px}
+.playerRow{display:flex;align-items:center;gap:10px;padding:9px 10px;background:#f4f7f9;border-radius:12px}
+.playerAvatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e5eef3;color:var(--blue);font-weight:900;font-size:12px;flex:0 0 30px}
+.playerEmpty{padding:11px;background:#f4f7f9;border-radius:12px;color:var(--muted);font-size:13px}
 .aboutFooter{margin-top:28px;padding:26px 22px 30px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;text-align:center;cursor:pointer}
 .aboutFooter h2{margin:0 0 8px;font-size:23px}
 .aboutFooter p{margin:0 auto;max-width:360px;color:#eaf2f6;line-height:1.5}
@@ -159,7 +171,7 @@ h1{font-size:27px;margin:4px 0 8px}
   var PSYCHOLOGISTS = ["Martina Silva","Nicolás Contreras","Fernanda Ríos","Tomás Valdés","Javiera Sepúlveda"];
   var LOCATIONS = ["Edificio Hucke","Edificio EICO","Edificio ICI"]; var GYM_ROOMS = ["101"];
 
-  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{}, sportsAvailability:{} };
+  var state = { view:"login", user:"", name:"", service:null, day:null, time:null, booking:null, history:[], waitlist:[], historyLoading:false, historyTab:"upcoming", gymAvailability:{}, gymRoomOccupancy:{}, professionalAvailability:{}, sportsAvailability:{}, sportPlayers:{} };
   var app = document.getElementById("app");
 
   function esc(value){
@@ -311,6 +323,7 @@ h1{font-size:27px;margin:4px 0 8px}
 
   var SPORT_LOCATION = "Parque 627, Valparaíso";
   var SPORT_LOCATION_IMAGE = "https://cdn.jsdelivr.net/gh/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io@main/assets/Captura%20de%20pantalla%202026-10-08%20233651.png?v=mapa-v13-7";
+  var GYM_LOCATION_IMAGE = "https://cdn.jsdelivr.net/gh/cristianfarfanses2-alt/cristianfarfanses2-alt.github.io@main/assets/edificio_hucke_google_maps.jpg?v=hucke-v14-3";
 
   async function loadSportsAvailability(dayKey){
     if(!dayKey) return;
@@ -332,6 +345,41 @@ h1{font-size:27px;margin:4px 0 8px}
         renderBooking();
       }
     }catch(e){}
+  }
+
+  async function loadSportPlayers(service,dayKey){
+    if(!dayKey || !isSport(service)) return;
+    var key=service+"|"+dayKey;
+    try{
+      var rows=await rpc("sportuv_sport_players",{p_service:service,p_booking_date:dayKey});
+      state.sportPlayers[key]=(rows||[]).map(function(r){
+        return {
+          name:r.player_name||"Jugador/a",
+          time:String(r.booking_time||"").slice(0,5)
+        };
+      });
+      if(state.view==="booking" && state.service===service && state.day===dayKey) renderBooking();
+    }catch(e){}
+  }
+
+  function sportPlayersPanel(){
+    if(!isSport(state.service) || !state.day) return "";
+    var key=state.service+"|"+state.day;
+    var players=state.sportPlayers[key];
+    if(!players){
+      return '<div class="playerListCard"><h3>👥 Jugadores inscritos</h3><div class="playerEmpty">Consultando jugadores inscritos…</div></div>';
+    }
+    var html='<div class="playerListCard"><h3>👥 Jugadores inscritos</h3><p class="small" style="margin:0;color:var(--muted)">Lista del partido seleccionado. En esta app de prueba los nombres ingresados deben ser ficticios.</p><div class="playerList">';
+    if(!players.length){
+      html+='<div class="playerEmpty">Aún no hay jugadores inscritos en este partido.</div>';
+    }else{
+      players.forEach(function(p,i){
+        var initial=String(p.name||"J").trim().charAt(0).toUpperCase()||"J";
+        html+='<div class="playerRow"><span class="playerAvatar">'+esc(initial)+'</span><div><b>'+(i+1)+'. '+esc(p.name)+'</b>'+(p.time?'<div class="small">'+esc(p.time)+' hrs</div>':'')+'</div></div>';
+      });
+    }
+    html+='</div></div>';
+    return html;
   }
 
   async function loadGymAvailability(dayKey){
@@ -454,7 +502,7 @@ h1{font-size:27px;margin:4px 0 8px}
           '<div id="loginError"></div>'+
         '</form>'+
         '<p class="small" style="text-align:center">Prototipo académico: usa un correo terminado en @uv.cl y una contraseña de 4 caracteres o más.</p>'+
-        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
+        '<p class="small version">SPORTUV · versión validación v14.3</p>'+
       '</section>';
   }
 
@@ -480,6 +528,8 @@ h1{font-size:27px;margin:4px 0 8px}
       '<main>'+
         '<h1>Hola, '+esc(displayName)+' 👋</h1>'+
         '<p class="sub">¿Qué quieres agendar hoy?</p>'+
+        '<div class="prototypeNotice"><b>🧪 Aplicación de prueba</b>Para probar SPORTUV utiliza únicamente datos ficticios. No ingreses información personal real.</div>'+
+        '<div class="gymInfoCard"><b>🏋️ Sala de musculatura</b><p>Las horas de la sala de musculatura se realizan en el <strong>Edificio Hucke · Sala 101</strong>.</p><img src="'+GYM_LOCATION_IMAGE+'" alt="Ubicación referencial del Edificio Hucke"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>'+
         cards+
       '</main>'+
       '<section class="aboutFooter" data-action="about">'+
@@ -684,6 +734,7 @@ h1{font-size:27px;margin:4px 0 8px}
           return html;
         })() : '')+
         (isSport(state.service) ? '<div class="sportLocationCard"><b>📍 Ubicación del partido</b><p style="margin:7px 0 0"><strong>'+esc(SPORT_LOCATION)+'</strong></p><p class="small" style="margin:5px 0 0">Solo sábados · Horario: <strong>'+esc(sportTime(state.service))+' hrs</strong> · Capacidad máxima: <strong>'+sportCapacity(state.service)+' jugadores</strong>.</p><img src="'+SPORT_LOCATION_IMAGE+'" alt="Ubicación referencial en Parque 627, Valparaíso"><div class="mapCredit">Imagen referencial del lugar · Propiedad de Google Maps.</div></div>' : '')+
+        sportPlayersPanel()+
         '<div class="small" style="margin:8px 2px 0">Máximo una reserva por día para cada actividad.</div>'+
         '<button class="btn" id="confirmBooking" '+(!state.day||!state.time?'disabled':'')+'>Agendar</button>'+
       '</main>';
@@ -696,6 +747,9 @@ h1{font-size:27px;margin:4px 0 8px}
     }
     if(isSport(state.service) && state.day && !state.sportsAvailability[state.day]){
       loadSportsAvailability(state.day);
+    }
+    if(isSport(state.service) && state.day && !state.sportPlayers[state.service+"|"+state.day]){
+      loadSportPlayers(state.service,state.day);
     }
   }
 
@@ -766,7 +820,7 @@ h1{font-size:27px;margin:4px 0 8px}
         '</div>'+
         extra+
         '<button class="btn" data-action="home">Volver al inicio</button>'+
-        '<p class="small version">SPORTUV · versión deportes v14.2</p>'+
+        '<p class="small version">SPORTUV · versión validación v14.3</p>'+
       '</main>';
   }
 
@@ -888,7 +942,10 @@ h1{font-size:27px;margin:4px 0 8px}
       }
       if(state.service==="gym") loadGymAvailability(state.day);
       else if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
-      else if(isSport(state.service)) loadSportsAvailability(state.day);
+      else if(isSport(state.service)){
+        loadSportsAvailability(state.day);
+        loadSportPlayers(state.service,state.day);
+      }
       else renderBooking();
     }
   },30000);
@@ -1070,7 +1127,10 @@ h1{font-size:27px;margin:4px 0 8px}
       state.time = null;
       if(state.service==="gym") loadGymAvailability(state.day);
       if(state.service==="nut" || state.service==="psi") loadProfessionalAvailability(state.service,state.day);
-      if(isSport(state.service)) loadSportsAvailability(state.day);
+      if(isSport(state.service)){
+        loadSportsAvailability(state.day);
+        loadSportPlayers(state.service,state.day);
+      }
       render();
       return;
     }
